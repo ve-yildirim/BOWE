@@ -185,6 +185,18 @@ const ICON = {
   search: svgI('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/>'),
 };
 
+const GREETINGS = [
+  'Hi bish', 'Hey betch', 'Sup, loser', 'Hello, menace', 'Hey, you little gremlin',
+  'What’s up, chaos goblin', 'Hey, hot mess', 'Greetings, peasant',
+  'Well, well, well… this bitch again', 'Look who crawled out of Mordor',
+  'Welcome back, you stiff bastard', 'What’s cracking? Besides your knees', 'Rise and whine',
+  'Hey, hobbit', 'Sup, stretch goblin', 'Greetings, my precious', 'You shall not… skip today',
+  'Back again, you absolute orc', 'Hey, tight ass', 'Alright, you magnificent disaster',
+  'hi bish', 'Selamünaleyküm göt',
+];
+// Picked once per app launch so it doesn't change every time you switch tabs.
+const GREETING = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
+
 /* ---------- Views ---------- */
 
 function routineCard(r) {
@@ -200,8 +212,6 @@ function routineCard(r) {
 }
 
 function viewHome() {
-  const h = new Date().getHours();
-  const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
   const w = thisWeek();
   const days = activeDays();
   const today = new Date();
@@ -219,8 +229,7 @@ function viewHome() {
       ${logo('hero-logo')}
       <div class="brand"><b>BOWE:</b> Bend-over with Emre</div>
     </header>
-    <h1 class="display">${greet}</h1>
-    <p class="lede">${today.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+    <h1 class="display greeting">${esc(GREETING)}</h1>
     <div class="stats">
       <div class="stat"><b>${streak()}</b><span>day streak</span></div>
       <div class="stat"><b>${w.sessions}</b><span>this week</span></div>

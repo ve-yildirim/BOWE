@@ -257,8 +257,9 @@ details.move p { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
 @media (prefers-color-scheme: dark) {
   /* White outline that follows the wizard's shape, so it stands out on dark backgrounds */
   .logo {
-    filter: drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff)
-            drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff);
+    filter: drop-shadow(.75px 0 0 #fff) drop-shadow(-.75px 0 0 #fff)
+            drop-shadow(0 .75px 0 #fff) drop-shadow(0 -.75px 0 #fff);
   }
 }
 @media (max-width: 370px) { .hero .brand { white-space: normal; } }
+.greeting { font-size: 32px; line-height: 1.15; text-wrap: balance; }
