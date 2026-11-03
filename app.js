@@ -183,6 +183,7 @@ const ICON = {
   next: svgI('<path d="M6 6l8 6-8 6z" fill="currentColor"/><path d="M18 6v12"/>'),
   plus: svgI('<path d="M12 5v14M5 12h14"/>'),
   search: svgI('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/>'),
+  grip: svgI('<circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/>', true),
 };
 
 const GREETINGS = [
@@ -349,12 +350,12 @@ function viewEdit(id) {
     const ex = exById(it.exId);
     if (!ex) return '';
     const opts = SECS_OPTS.includes(it.secs) ? SECS_OPTS : [...SECS_OPTS, it.secs].sort((a, b) => a - b);
-    return `<div class="item">
+    return `<div class="item" data-i="${i}">
+      <button class="handle" data-handle aria-label="Drag to reorder">${ICON.grip}</button>
       <div class="grow"><div class="name">${esc(ex.name)}</div>${ex.sided ? '<span class="tag">each side</span>' : ''}</div>
       <select class="input" data-act="secs" data-i="${i}" aria-label="Seconds">
         ${opts.map((s) => `<option value="${s}" ${s === it.secs ? 'selected' : ''}>${fmtSecsOpt(s)}</option>`).join('')}
       </select>
-      <button class="iconbtn" data-act="up" data-i="${i}" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
       <button class="iconbtn" data-act="remove" data-i="${i}" aria-label="Remove">✕</button>
     </div>`;
   }).join('');
@@ -810,7 +811,6 @@ document.addEventListener('click', (e) => {
     case 'stop': closePlayer(); break;
 
     case 'color': syncDraftFields(); draft.color = t.dataset.v; render(); break;
-    case 'up': syncDraftFields(); [draft.items[i - 1], draft.items[i]] = [draft.items[i], draft.items[i - 1]]; render(); break;
     case 'remove': syncDraftFields(); draft.items.splice(i, 1); render(); break;
     case 'open-picker': syncDraftFields(); openSheet(pickerHtml()); break;
     case 'add-move': {
@@ -894,6 +894,64 @@ document.addEventListener('input', (e) => {
     $('#pick-list').innerHTML = pickListHtml();
   }
 });
+
+/* Drag to reorder moves in the routine editor. Only the grip handle starts a
+   drag, so the list still scrolls normally everywhere else. */
+let drag = null;
+
+document.addEventListener('pointerdown', (e) => {
+  const handle = e.target.closest('[data-handle]');
+  if (!handle || !draft) return;
+  e.preventDefault();
+  syncDraftFields();
+  const row = handle.closest('.item');
+  const rows = [...row.parentElement.querySelectorAll('.item')];
+  // Positions are in page coordinates so they stay valid while auto-scrolling.
+  const rects = rows.map((r) => { const b = r.getBoundingClientRect(); return { top: b.top + scrollY, height: b.height }; });
+  const from = rows.indexOf(row);
+  drag = { row, rows, rects, from, to: from, startY: e.clientY + scrollY, h: rects[from].height, id: e.pointerId };
+  handle.setPointerCapture(e.pointerId);
+  row.classList.add('dragging');
+  row.parentElement.classList.add('sorting');
+});
+
+document.addEventListener('pointermove', (e) => {
+  if (!drag || e.pointerId !== drag.id) return;
+  // Scroll when dragging near the top, or near the bottom above the tab bar.
+  if (e.clientY < 70) scrollBy(0, -12);
+  else if (e.clientY > innerHeight - 110) scrollBy(0, 12);
+  const dy = e.clientY + scrollY - drag.startY;
+  drag.row.style.transform = `translateY(${dy}px)`;
+  const r0 = drag.rects[drag.from];
+  const center = r0.top + r0.height / 2 + dy;
+  let to = 0;
+  drag.rects.forEach((r, j) => { if (j !== drag.from && r.top + r.height / 2 < center) to++; });
+  drag.to = to;
+  drag.rows.forEach((r, j) => {
+    if (j === drag.from) return;
+    let shift = 0;
+    if (drag.from < to && j > drag.from && j <= to) shift = -drag.h;
+    if (to < drag.from && j >= to && j < drag.from) shift = drag.h;
+    r.style.transform = shift ? `translateY(${shift}px)` : '';
+  });
+});
+
+function endDrag(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const { from, to, rows } = drag;
+  drag = null;
+  if (from !== to) {
+    const order = rows.map((r) => Number(r.dataset.i));
+    const [moved] = order.splice(from, 1);
+    order.splice(to, 0, moved);
+    // Moves whose exercise was deleted aren't shown; keep them at the end.
+    const hidden = draft.items.filter((_, i) => !order.includes(i));
+    draft.items = [...order.map((i) => draft.items[i]), ...hidden];
+  }
+  render();
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', endDrag);
 
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible' && player && !wakeLock) await requestWakeLock();
