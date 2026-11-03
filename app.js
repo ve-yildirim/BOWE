@@ -147,19 +147,46 @@ function routineSecs(r) {
   return work + Math.max(0, items.length - 1) * (r.rest || 0);
 }
 function activeDays() { return new Set(history().map((h) => dateKey(h.date))); }
-function streak() {
-  const days = activeDays();
-  const d = new Date();
-  if (!days.has(dateKey(d))) d.setDate(d.getDate() - 1);
-  let n = 0;
-  while (days.has(dateKey(d))) { n++; d.setDate(d.getDate() - 1); }
-  return n;
+function weekStart(d = new Date()) {
+  const s = new Date(d); s.setHours(0, 0, 0, 0);
+  s.setDate(s.getDate() - ((s.getDay() + 6) % 7)); // Monday
+  return s;
 }
 function thisWeek() {
-  const start = new Date(); start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // Monday
+  const start = weekStart();
   const l = history().filter((h) => new Date(h.date) >= start);
   return { sessions: l.length, secs: l.reduce((t, h) => t + h.secs, 0) };
+}
+
+/* Weekly goal: stretch on 1–3 days a week, aiming for 2. Days count, not
+   sessions. "On target" means this week already has a stretch day, or the
+   last 4 weeks average at least the band's minimum, so one quiet week
+   doesn't flip it. */
+const GOAL = { min: 1, aim: 2, max: 3 };
+
+// Distinct stretch days per week, oldest first, ending with the current week.
+function weeklyDays(weeks) {
+  const days = activeDays();
+  const cur = weekStart();
+  return Array.from({ length: weeks }, (_, k) => {
+    const start = new Date(cur); start.setDate(cur.getDate() - 7 * (weeks - 1 - k));
+    let n = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      if (days.has(dateKey(d))) n++;
+    }
+    return { start, days: n };
+  });
+}
+function goalStatus() {
+  const last4 = weeklyDays(4).map((w) => w.days);
+  const avg = last4.reduce((a, b) => a + b, 0) / 4;
+  const now = last4[3];
+  return { now, avg, on: now >= GOAL.min || avg >= GOAL.min };
+}
+function weekDaysLabel(n) {
+  if (n >= GOAL.aim) return `Day ${n} this week. Goal met.`;
+  return `Day ${n} this week. ${GOAL.aim - n} more for your aim.`;
 }
 function areas() {
   const used = new Set(list('exercises').map((e) => e.area || 'Other'));
@@ -309,6 +336,7 @@ function viewHome() {
     return `<div><div class="d">${label}</div><div class="dot ${cls}"></div></div>`;
   }).join('');
   const rs = routines();
+  const g = goalStatus();
 
   return `
     <header class="hero">
@@ -317,7 +345,7 @@ function viewHome() {
     </header>
     <h1 class="display greeting">${esc(GREETING)}</h1>
     <div class="stats">
-      <div class="stat"><b>${streak()}</b><span>day streak</span></div>
+      <button class="stat goalstat" data-act="goal" aria-label="Goal details"><b class="${g.on ? 'on' : 'off'}"><i class="gdot"></i>${g.on ? 'On target' : 'Off target'}</b><span>goal ›</span></button>
       <div class="stat"><b>${w.sessions}</b><span>this week</span></div>
       <div class="stat"><b>${Math.round(w.secs / 60)}</b><span>minutes</span></div>
     </div>
@@ -439,10 +467,11 @@ function viewProgress() {
     <div class="muted small">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} · ${fmtMins(h.secs)}</div></div>
     <button class="iconbtn" data-act="delete-session" data-id="${esc(h.id)}" aria-label="Delete session">✕</button></div>`).join('');
   const st = settings();
+  const g = goalStatus();
 
   return `<h1 class="display">Progress</h1>
     <div class="stats">
-      <div class="stat"><b>${streak()}</b><span>day streak</span></div>
+      <button class="stat goalstat" data-act="goal" aria-label="Goal details"><b class="${g.on ? 'on' : 'off'}"><i class="gdot"></i>${g.on ? 'On target' : 'Off target'}</b><span>goal ›</span></button>
       <div class="stat"><b>${hs.length}</b><span>sessions</span></div>
       <div class="stat"><b>${Math.round(total / 60)}</b><span>minutes</span></div>
     </div>
@@ -496,6 +525,59 @@ function pickerHtml() {
   return `<div class="row between"><h2>Add moves</h2><button class="btn primary" data-act="close-sheet">Done</button></div>
     <label class="search">${ICON.search}<input id="pick-search" type="search" placeholder="Search moves" autocomplete="off"></label>
     <div id="pick-list">${pickListHtml()}</div>`;
+}
+
+function goalChart(weeks) {
+  const W = 360, X0 = 14, X1 = 292, Y = (v) => 178 - Math.min(v, 5) * 30;
+  const n = weeks.length, x = (i) => X0 + (i * (X1 - X0)) / (n - 1);
+  const vals = weeks.map((w) => w.days);
+  const cls = (v) => (v > GOAL.max ? 'above' : v >= GOAL.aim ? 'aim' : v >= GOAL.min ? 'min' : 'below');
+  let s = '';
+  s += `<rect class="gc-outer" x="${X0 - 6}" y="${Y(GOAL.max)}" width="${X1 - X0 + 12}" height="${Y(GOAL.min) - Y(GOAL.max)}" rx="4"/>`;
+  s += `<rect class="gc-inner" x="${X0 - 6}" y="${Y(GOAL.max)}" width="${X1 - X0 + 12}" height="${Y(GOAL.aim) - Y(GOAL.max)}" rx="4"/>`;
+  s += `<line class="gc-base" x1="0" x2="310" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  s += `<polyline class="gc-line" points="${vals.map((v, i) => `${x(i)},${Y(v)}`).join(' ')}"/>`;
+  vals.forEach((v, i) => {
+    if (i === n - 1) s += `<circle class="gc-ring" cx="${x(i)}" cy="${Y(v)}" r="10"/><circle class="gc-now ${cls(v)}" cx="${x(i)}" cy="${Y(v)}" r="5"/>`;
+    else s += `<circle class="gc-dot ${cls(v)}" cx="${x(i)}" cy="${Y(v)}" r="5"/>`;
+  });
+  const segW = (X1 - X0 + 12) / n;
+  vals.forEach((v, i) => { s += `<rect class="gc-seg ${cls(v)}" x="${X0 - 6 + i * segW + 1}" y="196" width="${segW - 2}" height="6" rx="2"/>`; });
+  const fmt = (d) => d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  [0, Math.round((n - 1) / 3), Math.round((2 * (n - 1)) / 3)].forEach((i) => { s += `<text class="gc-label" x="${x(i)}" y="222" text-anchor="middle">${fmt(weeks[i].start)}</text>`; });
+  s += `<text class="gc-label now" x="${x(n - 1) + 8}" y="222" text-anchor="end">This week</text>`;
+  const gx = 330;
+  s += `<rect class="gc-track" x="${gx - 3}" y="${Y(5)}" width="6" height="${Y(0) - Y(5)}" rx="3"/>`;
+  s += `<rect class="gc-outer strong" x="${gx - 3}" y="${Y(GOAL.max)}" width="6" height="${Y(GOAL.min) - Y(GOAL.max)}" rx="3"/>`;
+  s += `<rect class="gc-fill" x="${gx - 3}" y="${Y(GOAL.max)}" width="6" height="${Y(GOAL.aim) - Y(GOAL.max)}" rx="3"/>`;
+  s += `<circle class="gc-marker" cx="${gx}" cy="${Y(vals[n - 1])}" r="5"/>`;
+  [[GOAL.max, ''], [GOAL.aim, 'aim'], [GOAL.min, 'min']].forEach(([v, c]) => { s += `<text class="gc-label ${c}" x="${gx - 12}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`; });
+  return `<svg class="goalchart" viewBox="0 0 ${W} 230" role="img" aria-label="Stretch days per week for the last ${n} weeks, with a band from ${GOAL.min} to ${GOAL.max} days">${s}</svg>`;
+}
+
+function goalSheetHtml() {
+  const g = goalStatus();
+  const first = history()[0];
+  // Show up to 12 weeks, but not weeks from before you started using the app.
+  const since = first ? Math.ceil((weekStart() - weekStart(new Date(first.date))) / (7 * 864e5)) + 1 : 1;
+  const weeks = weeklyDays(Math.min(12, Math.max(4, since)));
+  const counted = weeks.slice(-Math.min(weeks.length, since));
+  const inBand = counted.filter((w) => w.days >= GOAL.min && w.days <= GOAL.max).length;
+  return `<div class="row between"><h2>Goal</h2><button class="link" data-act="close-sheet">Close</button></div>
+    <p class="small goal-sub ${g.on ? 'on' : 'off'}">${g.on ? 'On target' : 'Off target'} · ${GOAL.min}–${GOAL.max} days a week, aim ${GOAL.aim}</p>
+    <div class="stats" style="margin-top:12px">
+      <div class="stat"><b>${g.now}</b><span>days this week</span></div>
+      <div class="stat"><b>${g.avg.toFixed(1)}</b><span>4-week avg</span></div>
+      <div class="stat"><b>${inBand}/${counted.length}</b><span>weeks in band</span></div>
+    </div>
+    <div style="margin-top:16px">${goalChart(weeks)}</div>
+    <div class="gc-legend">
+      <span><i class="sw inner"></i>Aim ${GOAL.aim}–${GOAL.max}</span>
+      <span><i class="sw outer"></i>Minimum ${GOAL.min}</span>
+      <span><i class="ring below"></i>Below</span>
+      <span><i class="ring above"></i>Above</span>
+    </div>
+    <p class="muted small" style="margin-top:14px">On target when you've stretched this week, or averaged at least ${GOAL.min} day a week over the last 4 weeks.</p>`;
 }
 
 function isImage(url) { return /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i.test(url); }
@@ -733,7 +815,7 @@ function finishPlayer() {
       ${logo('done-logo')}
       <h1 class="display">Well done</h1>
       <p class="muted" style="margin:0">${esc(r.name)} · ${fmtMins(secs)}</p>
-      <p class="small" style="margin:6px 0 0">${streak()} day streak</p>
+      <p class="small" style="margin:6px 0 0">${weekDaysLabel(goalStatus().now)}</p>
     </div>
     <button class="btn primary block" data-act="stop" style="max-width:420px">Done</button>`;
 }
@@ -874,6 +956,7 @@ document.addEventListener('click', (e) => {
       if (confirm('Delete this session from your history?')) { remove('history', t.dataset.id); render(); }
       break;
     case 'export': exportData(); break;
+    case 'goal': openSheet(goalSheetHtml()); break;
   }
 });
 

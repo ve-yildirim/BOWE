@@ -269,3 +269,43 @@ details.move p { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
 .handle svg { width: 18px; height: 18px; }
 .sorting .item { transition: transform .15s ease; }
 .item.dragging { position: relative; z-index: 2; transition: none; background: var(--surface); box-shadow: 0 8px 24px rgba(0, 0, 0, .15); border-radius: 12px; cursor: grabbing; }
+
+/* Goal tile & chart */
+.goalstat { background: none; border: 0; text-align: left; cursor: pointer; color: inherit; }
+.goalstat b { font-size: 20px; line-height: 1.5; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.goalstat .gdot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--accent); }
+.goalstat b.off .gdot { background: var(--warn); }
+.goal-sub { margin: 4px 0 0; color: var(--accent); }
+.goal-sub.off { color: var(--warn); }
+.goalchart { width: 100%; height: auto; display: block; font-family: var(--sans); }
+.gc-outer { fill: var(--accent); opacity: .16; }
+.gc-outer.strong { opacity: .35; }
+.gc-inner { fill: var(--accent); opacity: .32; }
+.gc-fill { fill: var(--accent); }
+.gc-base { stroke: var(--line); }
+.gc-track { fill: var(--line); }
+.gc-line { fill: none; stroke: var(--faint); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; opacity: .7; }
+.gc-dot { fill: var(--bg); stroke: var(--muted); stroke-width: 2.5; }
+.gc-dot.below { stroke: var(--warn); }
+.gc-dot.above { stroke: var(--above); }
+.gc-ring { fill: var(--surface); stroke: var(--line); }
+.gc-now { fill: var(--accent); }
+.gc-now.below { fill: var(--warn); }
+.gc-now.above { fill: var(--above); }
+.gc-marker { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+.gc-seg { fill: var(--line); }
+.gc-seg.min { fill: var(--accent); opacity: .45; }
+.gc-seg.aim { fill: var(--accent); }
+.gc-seg.above { fill: var(--above); }
+.gc-label { font-size: 11px; fill: var(--muted); }
+.gc-label.now { fill: var(--ink); }
+.gc-label.aim { fill: var(--accent); }
+.gc-legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.gc-legend span { display: flex; align-items: center; gap: 5px; }
+.gc-legend .sw { width: 10px; height: 10px; border-radius: 2px; background: var(--accent); }
+.gc-legend .sw.inner { opacity: .5; }
+.gc-legend .sw.outer { opacity: .2; }
+.gc-legend .ring { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--warn); }
+.gc-legend .ring.above { border-color: var(--above); }
+:root { --warn: #C98A3D; --above: #6F86B0; }
+@media (prefers-color-scheme: dark) { :root { --warn: #D9A35E; --above: #8FA3C9; } }
