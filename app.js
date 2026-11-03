@@ -9,7 +9,7 @@ const AREAS = ['Neck', 'Shoulders', 'Upper back', 'Spine', 'Core', 'Hips', 'Legs
 const LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
 const COLORS = ['#6F8F78', '#C9A27E', '#B98B82', '#8A9DB0', '#A39BB5', '#9C9A8E'];
 const SECS_OPTS = [10, 15, 20, 30, 45, 60, 75, 90, 120, 180, 240, 300];
-const DEFAULT_SETTINGS = { voice: true, sound: true, getReady: 5, updatedAt: 0 };
+const DEFAULT_SETTINGS = { voice: true, sound: true, getReady: 5, weeklyTarget: 2, updatedAt: 0 };
 
 /* ---------- Helpers ---------- */
 
@@ -158,11 +158,14 @@ function thisWeek() {
   return { sessions: l.length, secs: l.reduce((t, h) => t + h.secs, 0) };
 }
 
-/* Weekly goal: stretch on 1–3 days a week, aiming for 2. Days count, not
-   sessions. "On target" means this week already has a stretch day, or the
-   last 4 weeks average at least the band's minimum, so one quiet week
-   doesn't flip it. */
-const GOAL = { min: 1, aim: 2, max: 3 };
+/* Weekly goal: a band around your weekly target (set on the Progress tab),
+   from one day below it to one day above. Days count, not sessions.
+   "On target" means this week has already reached the band's minimum, or
+   the last 4 weeks average at least that, so one quiet week doesn't flip it. */
+function goal() {
+  const aim = settings().weeklyTarget || 2;
+  return { min: Math.max(1, aim - 1), aim, max: Math.min(7, aim + 1) };
+}
 
 // Distinct stretch days per week, oldest first, ending with the current week.
 function weeklyDays(weeks) {
@@ -179,14 +182,16 @@ function weeklyDays(weeks) {
   });
 }
 function goalStatus() {
+  const GOAL_ = goal();
   const last4 = weeklyDays(4).map((w) => w.days);
   const avg = last4.reduce((a, b) => a + b, 0) / 4;
   const now = last4[3];
-  return { now, avg, on: now >= GOAL.min || avg >= GOAL.min };
+  return { now, avg, on: now >= GOAL_.min || avg >= GOAL_.min };
 }
 function weekDaysLabel(n) {
-  if (n >= GOAL.aim) return `Day ${n} this week. Goal met.`;
-  return `Day ${n} this week. ${GOAL.aim - n} more for your aim.`;
+  const GOAL_ = goal();
+  if (n >= GOAL_.aim) return `Day ${n} this week. Goal met.`;
+  return `Day ${n} this week. ${GOAL_.aim - n} more for your aim.`;
 }
 function areas() {
   const used = new Set(list('exercises').map((e) => e.area || 'Other'));
@@ -483,6 +488,9 @@ function viewProgress() {
     <div class="card" style="padding:4px 14px">
       <label class="switch"><span>Voice cues</span><input type="checkbox" data-set="voice" ${st.voice ? 'checked' : ''}></label>
       <label class="switch"><span>Beeps</span><input type="checkbox" data-set="sound" ${st.sound ? 'checked' : ''}></label>
+      <label class="switch"><span>Weekly target</span>
+        <select class="input" data-set="weeklyTarget" style="width:auto;margin:0">${[1, 2, 3, 4, 5, 6, 7].map((n) => `<option value="${n}" ${n === (st.weeklyTarget || 2) ? 'selected' : ''}>${n} day${n === 1 ? '' : 's'} a week</option>`).join('')}</select>
+      </label>
       <label class="switch"><span>Get-ready countdown</span>
         <select class="input" data-set="getReady" style="width:auto;margin:0">${[0, 3, 5, 10, 15].map((s) => `<option value="${s}" ${s === st.getReady ? 'selected' : ''}>${s ? s + 's' : 'Off'}</option>`).join('')}</select>
       </label>
@@ -528,13 +536,16 @@ function pickerHtml() {
 }
 
 function goalChart(weeks) {
-  const W = 360, X0 = 14, X1 = 292, Y = (v) => 178 - Math.min(v, 5) * 30;
+  const GOAL_ = goal();
+  // Scale to at least 5 days, more when the target or a week goes higher.
+  const top = Math.min(7, Math.max(5, GOAL_.max + 1, ...weeks.map((w) => w.days)));
+  const W = 360, X0 = 14, X1 = 292, Y = (v) => 178 - Math.min(v, top) * (150 / top);
   const n = weeks.length, x = (i) => X0 + (i * (X1 - X0)) / (n - 1);
   const vals = weeks.map((w) => w.days);
-  const cls = (v) => (v > GOAL.max ? 'above' : v >= GOAL.aim ? 'aim' : v >= GOAL.min ? 'min' : 'below');
+  const cls = (v) => (v > GOAL_.max ? 'above' : v >= GOAL_.aim ? 'aim' : v >= GOAL_.min ? 'min' : 'below');
   let s = '';
-  s += `<rect class="gc-outer" x="${X0 - 6}" y="${Y(GOAL.max)}" width="${X1 - X0 + 12}" height="${Y(GOAL.min) - Y(GOAL.max)}" rx="4"/>`;
-  s += `<rect class="gc-inner" x="${X0 - 6}" y="${Y(GOAL.max)}" width="${X1 - X0 + 12}" height="${Y(GOAL.aim) - Y(GOAL.max)}" rx="4"/>`;
+  s += `<rect class="gc-outer" x="${X0 - 6}" y="${Y(GOAL_.max)}" width="${X1 - X0 + 12}" height="${Y(GOAL_.min) - Y(GOAL_.max)}" rx="4"/>`;
+  s += `<rect class="gc-inner" x="${X0 - 6}" y="${Y(GOAL_.max)}" width="${X1 - X0 + 12}" height="${Y(GOAL_.aim) - Y(GOAL_.max)}" rx="4"/>`;
   s += `<line class="gc-base" x1="0" x2="310" y1="${Y(0)}" y2="${Y(0)}"/>`;
   s += `<polyline class="gc-line" points="${vals.map((v, i) => `${x(i)},${Y(v)}`).join(' ')}"/>`;
   vals.forEach((v, i) => {
@@ -547,24 +558,25 @@ function goalChart(weeks) {
   [0, Math.round((n - 1) / 3), Math.round((2 * (n - 1)) / 3)].forEach((i) => { s += `<text class="gc-label" x="${x(i)}" y="222" text-anchor="middle">${fmt(weeks[i].start)}</text>`; });
   s += `<text class="gc-label now" x="${x(n - 1) + 8}" y="222" text-anchor="end">This week</text>`;
   const gx = 330;
-  s += `<rect class="gc-track" x="${gx - 3}" y="${Y(5)}" width="6" height="${Y(0) - Y(5)}" rx="3"/>`;
-  s += `<rect class="gc-outer strong" x="${gx - 3}" y="${Y(GOAL.max)}" width="6" height="${Y(GOAL.min) - Y(GOAL.max)}" rx="3"/>`;
-  s += `<rect class="gc-fill" x="${gx - 3}" y="${Y(GOAL.max)}" width="6" height="${Y(GOAL.aim) - Y(GOAL.max)}" rx="3"/>`;
+  s += `<rect class="gc-track" x="${gx - 3}" y="${Y(top)}" width="6" height="${Y(0) - Y(top)}" rx="3"/>`;
+  s += `<rect class="gc-outer strong" x="${gx - 3}" y="${Y(GOAL_.max)}" width="6" height="${Y(GOAL_.min) - Y(GOAL_.max)}" rx="3"/>`;
+  s += `<rect class="gc-fill" x="${gx - 3}" y="${Y(GOAL_.max)}" width="6" height="${Y(GOAL_.aim) - Y(GOAL_.max)}" rx="3"/>`;
   s += `<circle class="gc-marker" cx="${gx}" cy="${Y(vals[n - 1])}" r="5"/>`;
-  [[GOAL.max, ''], [GOAL.aim, 'aim'], [GOAL.min, 'min']].forEach(([v, c]) => { s += `<text class="gc-label ${c}" x="${gx - 12}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`; });
-  return `<svg class="goalchart" viewBox="0 0 ${W} 230" role="img" aria-label="Stretch days per week for the last ${n} weeks, with a band from ${GOAL.min} to ${GOAL.max} days">${s}</svg>`;
+  [[GOAL_.max, ''], [GOAL_.aim, 'aim'], [GOAL_.min, 'min']].forEach(([v, c]) => { s += `<text class="gc-label ${c}" x="${gx - 12}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`; });
+  return `<svg class="goalchart" viewBox="0 0 ${W} 230" role="img" aria-label="Stretch days per week for the last ${n} weeks, with a band from ${GOAL_.min} to ${GOAL_.max} days">${s}</svg>`;
 }
 
 function goalSheetHtml() {
+  const GOAL_ = goal();
   const g = goalStatus();
   const first = history()[0];
   // Show up to 12 weeks, but not weeks from before you started using the app.
   const since = first ? Math.ceil((weekStart() - weekStart(new Date(first.date))) / (7 * 864e5)) + 1 : 1;
   const weeks = weeklyDays(Math.min(12, Math.max(4, since)));
   const counted = weeks.slice(-Math.min(weeks.length, since));
-  const inBand = counted.filter((w) => w.days >= GOAL.min && w.days <= GOAL.max).length;
+  const inBand = counted.filter((w) => w.days >= GOAL_.min && w.days <= GOAL_.max).length;
   return `<div class="row between"><h2>Goal</h2><button class="link" data-act="close-sheet">Close</button></div>
-    <p class="small goal-sub ${g.on ? 'on' : 'off'}">${g.on ? 'On target' : 'Off target'} · ${GOAL.min}–${GOAL.max} days a week, aim ${GOAL.aim}</p>
+    <p class="small goal-sub ${g.on ? 'on' : 'off'}">${g.on ? 'On target' : 'Off target'} · ${GOAL_.min}–${GOAL_.max} days a week, aim ${GOAL_.aim}</p>
     <div class="stats" style="margin-top:12px">
       <div class="stat"><b>${g.now}</b><span>days this week</span></div>
       <div class="stat"><b>${g.avg.toFixed(1)}</b><span>4-week avg</span></div>
@@ -572,12 +584,12 @@ function goalSheetHtml() {
     </div>
     <div style="margin-top:16px">${goalChart(weeks)}</div>
     <div class="gc-legend">
-      <span><i class="sw inner"></i>Aim ${GOAL.aim}–${GOAL.max}</span>
-      <span><i class="sw outer"></i>Minimum ${GOAL.min}</span>
+      <span><i class="sw inner"></i>Aim ${GOAL_.aim}–${GOAL_.max}</span>
+      <span><i class="sw outer"></i>Minimum ${GOAL_.min}</span>
       <span><i class="ring below"></i>Below</span>
       <span><i class="ring above"></i>Above</span>
     </div>
-    <p class="muted small" style="margin-top:14px">On target when you've stretched this week, or averaged at least ${GOAL.min} day a week over the last 4 weeks.</p>`;
+    <p class="muted small" style="margin-top:14px">On target when you've stretched this week, or averaged at least ${GOAL_.min} day${GOAL_.min === 1 ? '' : 's'} a week over the last 4 weeks.</p>`;
 }
 
 function isImage(url) { return /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i.test(url); }
@@ -963,7 +975,10 @@ document.addEventListener('click', (e) => {
 document.addEventListener('change', (e) => {
   const t = e.target;
   if (t.dataset.act === 'secs') { syncDraftFields(); draft.items[Number(t.dataset.i)].secs = Number(t.value); render(); }
-  if (t.dataset.set) setSetting(t.dataset.set, t.type === 'checkbox' ? t.checked : Number(t.value));
+  if (t.dataset.set) {
+    setSetting(t.dataset.set, t.type === 'checkbox' ? t.checked : Number(t.value));
+    if (t.dataset.set === 'weeklyTarget') render(); // the goal tile depends on it
+  }
   if (t.id === 'import-file' && t.files[0]) { importData(t.files[0]); t.value = ''; }
 });
 
