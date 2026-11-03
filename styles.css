@@ -223,3 +223,36 @@ details.move p { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
 .done-mark { color: var(--accent); }
 .done-mark svg { width: 120px; height: 120px; }
 @media (prefers-reduced-motion: reduce) { .breath { animation: none; } }
+
+/* Logo */
+.hero { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.logo { display: block; height: auto; image-rendering: pixelated; }
+.hero-logo { width: 104px; }
+.hero .brand { font-size: 13px; font-weight: 600; letter-spacing: .22em; color: var(--accent); }
+.done-logo { width: min(70vw, 280px); }
+
+/* Search & filters */
+.search { display: flex; align-items: center; gap: 8px; margin: 14px 0 10px; padding: 0 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); }
+.search input { flex: 1; border: 0; background: transparent; padding: 12px 0; font-size: 16px; color: var(--ink); outline: none; min-width: 0; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin: 0 -22px; padding-left: 22px; padding-right: 22px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 7px 14px; font-size: 14px; color: var(--muted); }
+.chip.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+/* Move rows & detail */
+.moverow { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 12px 0; }
+.moverow:last-child { border-bottom: 0; }
+.moverow .grow { display: flex; flex-direction: column; }
+.moverow .name { font-weight: 500; }
+.moverow .chev { color: var(--faint); font-size: 22px; }
+.cue { font-family: var(--serif); font-size: 19px; line-height: 1.4; margin: 18px 0 0; }
+.steps { margin: 0; padding-left: 20px; }
+.steps li { margin: 6px 0; }
+.media { width: 100%; border-radius: 16px; display: block; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.p-media { max-height: 22vh; max-width: 100%; border-radius: 16px; margin-top: 14px; }
+.p-ring.small { width: min(44vw, 180px); }
+.p-ring.small .p-time { font-size: 44px; }
+@media (prefers-color-scheme: dark) {
+  .logo { background: #ECE8DF; border-radius: 18px; padding: 8px 10px; }
+}

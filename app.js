@@ -1,73 +1,25 @@
 'use strict';
 
-/* ---------- Data ---------- */
+/* ---------- Constants ---------- */
 
-const AREAS = ['Neck', 'Shoulders', 'Spine', 'Hips', 'Legs', 'Wrists', 'Other'];
-
-const BUILTIN = [
-  { id: 'neck-rolls', name: 'Neck rolls', area: 'Neck', sided: false, cue: 'Slow circles: ear toward shoulder, chin toward chest. Keep your shoulders relaxed.' },
-  { id: 'chin-tucks', name: 'Chin tucks', area: 'Neck', sided: false, cue: 'Glide your chin straight back into a double chin, pause, then release.' },
-  { id: 'shoulder-circles', name: 'Shoulder circles', area: 'Shoulders', sided: true, cue: 'Straight arm, draw the biggest slow circle you can without twisting your body.' },
-  { id: 'arm-circles', name: 'Arm circles', area: 'Shoulders', sided: false, cue: 'Arms out wide, small circles growing bigger. Reverse direction halfway.' },
-  { id: 'wall-slides', name: 'Wall slides', area: 'Shoulders', sided: false, cue: 'Back and forearms on the wall, slide your arms up into a Y and back down.' },
-  { id: 'thread-needle', name: 'Thread the needle', area: 'Shoulders', sided: true, cue: 'On all fours, slide one arm under your body and rest that shoulder on the floor.' },
-  { id: 'cat-cow', name: 'Cat-cow', area: 'Spine', sided: false, cue: 'On all fours, round your back up, then let your belly drop and look up. Move with your breath.' },
-  { id: 'open-book', name: 'Open book', area: 'Spine', sided: true, cue: 'Lie on your side with knees bent. Sweep the top arm open and follow it with your eyes.' },
-  { id: 'childs-pose', name: "Child's pose", area: 'Spine', sided: false, cue: 'Knees wide, hips back toward your heels, arms long. Breathe into your back.' },
-  { id: 'seated-twist', name: 'Seated twist', area: 'Spine', sided: true, cue: 'Sit tall and rotate from your mid-back, one hand behind you for support.' },
-  { id: '90-90', name: '90/90 switches', area: 'Hips', sided: false, cue: 'Seated with both knees bent at 90°. Rotate your knees side to side while staying tall.' },
-  { id: 'hip-flexor', name: 'Kneeling hip flexor', area: 'Hips', sided: true, cue: 'Half-kneeling, squeeze the back glute and gently shift your hips forward.' },
-  { id: 'pigeon', name: 'Pigeon', area: 'Hips', sided: true, cue: 'Front shin across the mat, back leg long. Fold forward if it feels good.' },
-  { id: 'deep-squat', name: 'Deep squat hold', area: 'Hips', sided: false, cue: 'Sink into a deep squat, heels down, elbows nudging knees out. Hold onto something if needed.' },
-  { id: 'frog', name: 'Frog stretch', area: 'Hips', sided: false, cue: 'Knees wide on the floor, ankles in line with knees. Gently rock your hips back.' },
-  { id: 'hip-circles', name: 'Hip circles', area: 'Hips', sided: true, cue: 'On all fours, draw the biggest slow circle you can with your knee.' },
-  { id: 'worlds-greatest', name: "World's greatest stretch", area: 'Legs', sided: true, cue: 'Step into a lunge, drop the inside elbow toward your foot, then rotate and reach up.' },
-  { id: 'hamstring', name: 'Hamstring stretch', area: 'Legs', sided: true, cue: 'Heel forward, leg straight, hinge at the hips with a flat back.' },
-  { id: 'ankle-rocks', name: 'Ankle rocks', area: 'Legs', sided: true, cue: 'Half-kneeling, drive your front knee out over your toes while the heel stays down.' },
-  { id: 'calf-stretch', name: 'Calf stretch', area: 'Legs', sided: true, cue: 'Hands on a wall, back leg straight, heel pressed into the floor.' },
-  { id: 'wrist-circles', name: 'Wrist circles', area: 'Wrists', sided: false, cue: 'Interlace your fingers and roll your wrists in both directions.' },
-  { id: 'wrist-rocks', name: 'Wrist rocks', area: 'Wrists', sided: false, cue: 'On all fours, fingers forward, gently rock forward and back over your hands.' },
-];
-
+const DB_KEY = 'bowe.db.v2';
+const LEGACY_KEY = 'mooby.v1';
+const COLLECTIONS = ['exercises', 'routines', 'history'];
+const AREAS = ['Neck', 'Shoulders', 'Upper back', 'Spine', 'Core', 'Hips', 'Legs', 'Ankles & feet', 'Wrists', 'Full body'];
+const LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
 const COLORS = ['#6F8F78', '#C9A27E', '#B98B82', '#8A9DB0', '#A39BB5', '#9C9A8E'];
-const SECS_OPTS = [10, 15, 20, 30, 45, 60, 75, 90, 120, 180];
-
-const STORE_KEY = 'mooby.v1';
-
-function seed() {
-  const r = (name, emoji, color, rest, items) => ({
-    id: uid(), name, emoji, color, rest,
-    items: items.map(([exId, secs]) => ({ exId, secs })),
-  });
-  return {
-    custom: [],
-    routines: [
-      r('Morning Wake-Up', '🌅', COLORS[1], 5, [['cat-cow', 45], ['neck-rolls', 30], ['arm-circles', 30], ['worlds-greatest', 30], ['deep-squat', 45], ['hip-circles', 30]]),
-      r('Desk Reset', '💻', COLORS[3], 5, [['chin-tucks', 30], ['shoulder-circles', 30], ['seated-twist', 30], ['wrist-circles', 30], ['hip-flexor', 45]]),
-      r('Hip Opener', '🦵', COLORS[2], 10, [['90-90', 60], ['hip-flexor', 60], ['pigeon', 60], ['frog', 60], ['deep-squat', 60], ['childs-pose', 60]]),
-    ],
-    history: [],
-    settings: { voice: true, sound: true, getReady: 5 },
-  };
-}
-
-function load() {
-  try { return JSON.parse(localStorage.getItem(STORE_KEY)); } catch { return null; }
-}
-function save() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { toast('Could not save on this device'); }
-}
-
-let state = load() || seed();
+const SECS_OPTS = [10, 15, 20, 30, 45, 60, 75, 90, 120, 180, 240, 300];
+const DEFAULT_SETTINGS = { voice: true, sound: true, getReady: 5, updatedAt: 0 };
 
 /* ---------- Helpers ---------- */
 
 const $ = (s, r = document) => r.querySelector(s);
-function uid() { return Math.random().toString(36).slice(2, 10); }
+const uid = () => Math.random().toString(36).slice(2, 10);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const allExercises = () => [...BUILTIN, ...state.custom];
-const exById = (id) => allExercises().find((e) => e.id === id);
-const routineById = (id) => state.routines.find((r) => r.id === id);
+const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+
+function readJSON(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } }
+function writeJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); return true; } catch { return false; } }
 
 function dateKey(d) {
   const x = new Date(d);
@@ -81,13 +33,120 @@ function fmtMins(s) {
   const m = Math.round(s / 60);
   return m < 1 ? `${Math.round(s)} sec` : `${m} min`;
 }
+function fmtSecsOpt(s) { return s < 60 ? `${s}s` : fmtClock(s); }
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 2000);
+}
+
+/* ---------- Database ----------
+   Exercises and starter routines live in data/starter.json, so every device
+   gets the same library. Anything edited in the app is saved on this device
+   on top of that file: records from the file carry updatedAt 0, so a local
+   edit (updatedAt > 0) wins, and deletions are kept as { deleted: true }. */
+
+const emptyDb = () => ({ exercises: {}, routines: {}, history: {}, settings: { ...DEFAULT_SETTINGS } });
+
+function blankExercise() {
+  return { id: '', name: '', area: AREAS[0], muscles: '', level: 'Beginner', equipment: 'None', sided: false, defaultSecs: 30, cue: '', steps: [], media: '', notes: '' };
+}
+
+function migrateLegacy() {
+  const old = readJSON(LEGACY_KEY);
+  if (!old) return null;
+  const d = emptyDb();
+  const now = Date.now();
+  (old.custom || []).forEach((m) => {
+    d.exercises[m.id] = { ...blankExercise(), ...m, updatedAt: now };
+  });
+  (old.routines || []).forEach((r, i) => {
+    d.routines[r.id] = { id: r.id, name: r.name, color: r.color, rest: r.rest, items: r.items, createdAt: i + 1, updatedAt: now };
+  });
+  // The old app seeded its own copies of the starter routines; don't show them twice.
+  ['r-morning', 'r-desk', 'r-hips'].forEach((id) => { d.routines[id] = { id, deleted: true, updatedAt: 1 }; });
+  (old.history || []).forEach((h) => { const id = 'h-' + uid(); d.history[id] = { id, ...h, updatedAt: now }; });
+  if (old.settings) d.settings = { ...DEFAULT_SETTINGS, ...old.settings, updatedAt: now };
+  return d;
+}
+
+let db = readJSON(DB_KEY) || migrateLegacy() || emptyDb();
+
+function saveLocal() {
+  if (!writeJSON(DB_KEY, db)) toast('Could not save on this device');
+}
+function put(col, rec) {
+  rec.updatedAt = Date.now();
+  db[col][rec.id] = rec;
+  saveLocal();
+}
+function remove(col, id) {
+  db[col][id] = { id, deleted: true, updatedAt: Date.now() };
+  saveLocal();
+}
+function setSetting(key, value) {
+  db.settings = { ...db.settings, [key]: value, updatedAt: Date.now() };
+  saveLocal();
+}
+const list = (col) => Object.values(db[col]).filter((r) => !r.deleted);
+const exById = (id) => { const e = db.exercises[id]; return e && !e.deleted ? e : undefined; };
+const routineById = (id) => { const r = db.routines[id]; return r && !r.deleted ? r : undefined; };
+const routines = () => list('routines').sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+const history = () => list('history').sort((a, b) => new Date(a.date) - new Date(b.date));
+const settings = () => db.settings || DEFAULT_SETTINGS;
+const isEdited = (rec) => rec.updatedAt > 0;
+
+// Pull in data/starter.json. Untouched records follow the file; records
+// edited or deleted on this device keep the local version.
+async function loadStarter() {
+  try {
+    const res = await fetch('data/starter.json', { cache: 'no-cache' });
+    const starter = await res.json();
+    let changed = false;
+    for (const col of ['exercises', 'routines']) {
+      for (const rec of starter[col] || []) {
+        const cur = db[col][rec.id];
+        if (cur && cur.updatedAt !== 0) continue;
+        const next = { ...rec, updatedAt: 0 };
+        if (JSON.stringify(cur) !== JSON.stringify(next)) { db[col][rec.id] = next; changed = true; }
+      }
+    }
+    if (changed) saveLocal();
+    return changed;
+  } catch {
+    return false;
+  }
+}
+
+// Used by backup import: per record, the newer copy wins.
+function merge(local, incoming) {
+  const out = emptyDb();
+  for (const col of COLLECTIONS) {
+    const a = local[col] || {};
+    const b = incoming[col] || {};
+    for (const id of new Set([...Object.keys(a), ...Object.keys(b)])) {
+      out[col][id] = !b[id] ? a[id] : !a[id] ? b[id] : b[id].updatedAt > a[id].updatedAt ? b[id] : a[id];
+    }
+  }
+  const sa = local.settings || DEFAULT_SETTINGS;
+  const sb = incoming.settings || DEFAULT_SETTINGS;
+  out.settings = sb.updatedAt > sa.updatedAt ? sb : sa;
+  return out;
+}
+
+/* ---------- Derived data ---------- */
+
+const swatch = (r) => (COLORS.includes(r.color) ? r.color : COLORS[0]);
+
 function routineSecs(r) {
   const items = r.items.filter((i) => exById(i.exId));
   const work = items.reduce((t, i) => t + i.secs * (exById(i.exId).sided ? 2 : 1), 0);
   return work + Math.max(0, items.length - 1) * (r.rest || 0);
 }
-
-function activeDays() { return new Set(state.history.map((h) => dateKey(h.date))); }
+function activeDays() { return new Set(history().map((h) => dateKey(h.date))); }
 function streak() {
   const days = activeDays();
   const d = new Date();
@@ -99,25 +158,22 @@ function streak() {
 function thisWeek() {
   const start = new Date(); start.setHours(0, 0, 0, 0);
   start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // Monday
-  const list = state.history.filter((h) => new Date(h.date) >= start);
-  return { sessions: list.length, secs: list.reduce((t, h) => t + h.secs, 0) };
+  const l = history().filter((h) => new Date(h.date) >= start);
+  return { sessions: l.length, secs: l.reduce((t, h) => t + h.secs, 0) };
+}
+function areas() {
+  const used = new Set(list('exercises').map((e) => e.area || 'Other'));
+  return [...AREAS.filter((a) => used.has(a)), ...[...used].filter((a) => !AREAS.includes(a)).sort()];
+}
+function searchMoves(query, area = '') {
+  const q = query.trim().toLowerCase();
+  return list('exercises')
+    .filter((e) => !area || (e.area || 'Other') === area)
+    .filter((e) => !q || [e.name, e.area, e.muscles, e.equipment, e.level].join(' ').toLowerCase().includes(q))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-let toastTimer;
-function toast(msg) {
-  const t = $('#toast');
-  t.textContent = msg; t.hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, 1800);
-}
-
-function mark() {
-  return `<svg viewBox="0 0 512 512" aria-hidden="true">
-    <path d="M190 404 L190 252 C190 176 236 132 292 140 C340 147 356 196 350 262" fill="none" stroke="currentColor" stroke-width="40" stroke-linecap="round"/>
-    <circle cx="344" cy="330" r="30" fill="currentColor"/>
-  </svg>`;
-}
-const swatch = (r) => (COLORS.includes(r.color) ? r.color : COLORS[0]);
+const logo = (cls = '') => `<img class="logo ${cls}" src="icons/logo.png" alt="" aria-hidden="true">`;
 
 const svgI = (d, fill = false) => `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" ${fill ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"'}>${d}</svg>`;
 const ICON = {
@@ -126,26 +182,26 @@ const ICON = {
   prev: svgI('<path d="M18 6l-8 6 8 6z" fill="currentColor"/><path d="M6 6v12"/>'),
   next: svgI('<path d="M6 6l8 6-8 6z" fill="currentColor"/><path d="M18 6v12"/>'),
   plus: svgI('<path d="M12 5v14M5 12h14"/>'),
+  search: svgI('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/>'),
 };
 
 /* ---------- Views ---------- */
 
 function routineCard(r) {
-  const n = r.items.length;
+  const n = r.items.filter((i) => exById(i.exId)).length;
   return `<div class="card routine">
     <div class="swatch" style="--c:${swatch(r)}">${esc((r.name || '?').trim().charAt(0).toUpperCase())}</div>
-    <div class="grow">
+    <a class="grow" href="#edit/${esc(r.id)}" style="color:inherit;text-decoration:none">
       <h3>${esc(r.name)}</h3>
       <div class="meta">${n} move${n === 1 ? '' : 's'} · ${fmtMins(routineSecs(r))}</div>
-    </div>
-    <button class="play" data-act="play" data-id="${r.id}" aria-label="Start ${esc(r.name)}" ${n ? '' : 'disabled'}>${ICON.play}</button>
+    </a>
+    <button class="play" data-act="play" data-id="${esc(r.id)}" aria-label="Start ${esc(r.name)}" ${n ? '' : 'disabled'}>${ICON.play}</button>
   </div>`;
 }
 
 function viewHome() {
   const h = new Date().getHours();
   const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
-  const s = streak();
   const w = thisWeek();
   const days = activeDays();
   const today = new Date();
@@ -156,35 +212,31 @@ function viewHome() {
     const cls = days.has(k) ? 'on' : k === dateKey(today) ? 'today' : '';
     return `<div><div class="d">${label}</div><div class="dot ${cls}"></div></div>`;
   }).join('');
+  const rs = routines();
 
   return `
-    <header class="brandbar"><span class="brand">${mark()}BOWE</span><span class="muted small">${today.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span></header>
+    <header class="hero">
+      ${logo('hero-logo')}
+      <div class="brand">BOWE</div>
+    </header>
     <h1 class="display">${greet}</h1>
-    <p class="lede">A few quiet minutes for your body.</p>
+    <p class="lede">${today.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
     <div class="stats">
-      <div class="stat"><b>${s}</b><span>day streak</span></div>
+      <div class="stat"><b>${streak()}</b><span>day streak</span></div>
       <div class="stat"><b>${w.sessions}</b><span>this week</span></div>
       <div class="stat"><b>${Math.round(w.secs / 60)}</b><span>minutes</span></div>
     </div>
     <div class="week">${week}</div>
     <div class="section-title"><h2>Routines</h2><a class="link" href="#edit/new">New</a></div>
-    <div class="stack">${state.routines.length ? state.routines.map(routineCard).join('') : `<div class="empty">No routines yet. Make your first one!</div>`}</div>`;
+    <div class="stack">${rs.length ? rs.map(routineCard).join('') : `<div class="empty">No routines yet. Make your first one.</div>`}</div>`;
 }
 
 function viewRoutines() {
-  const list = state.routines.map((r) => `
-    <div class="card routine">
-      <div class="swatch" style="--c:${swatch(r)}">${esc((r.name || '?').trim().charAt(0).toUpperCase())}</div>
-      <a class="grow" href="#edit/${r.id}" style="color:inherit;text-decoration:none">
-        <h3>${esc(r.name)}</h3>
-        <div class="meta">${r.items.map((i) => esc(exById(i.exId)?.name || '')).filter(Boolean).join(' · ') || 'No moves yet'}</div>
-      </a>
-      <button class="play" data-act="play" data-id="${r.id}" aria-label="Start ${esc(r.name)}" ${r.items.length ? '' : 'disabled'}>${ICON.play}</button>
-    </div>`).join('');
+  const rs = routines();
   return `
     <div class="row between"><h1 class="display">Routines</h1><a class="btn primary" href="#edit/new">New routine</a></div>
     <p class="muted small">Tap a routine to edit it.</p>
-    <div class="stack">${list || `<div class="empty">No routines yet.</div>`}</div>`;
+    <div class="stack">${rs.length ? rs.map(routineCard).join('') : `<div class="empty">No routines yet.</div>`}</div>`;
 }
 
 let draft = null;
@@ -195,17 +247,18 @@ function viewEdit(id) {
     if (id !== 'new' && !src) { location.hash = '#routines'; return ''; }
     draft = src
       ? JSON.parse(JSON.stringify(src))
-      : { id: uid(), name: '', color: COLORS[0], rest: 5, items: [] };
+      : { id: 'r-' + uid(), name: '', color: COLORS[0], rest: 5, items: [], createdAt: Date.now() };
     draft._for = id;
   }
   const d = draft;
   const items = d.items.map((it, i) => {
     const ex = exById(it.exId);
     if (!ex) return '';
+    const opts = SECS_OPTS.includes(it.secs) ? SECS_OPTS : [...SECS_OPTS, it.secs].sort((a, b) => a - b);
     return `<div class="item">
       <div class="grow"><div class="name">${esc(ex.name)}</div>${ex.sided ? '<span class="tag">each side</span>' : ''}</div>
       <select class="input" data-act="secs" data-i="${i}" aria-label="Seconds">
-        ${SECS_OPTS.map((s) => `<option value="${s}" ${s === it.secs ? 'selected' : ''}>${s < 60 ? s + 's' : fmtClock(s)}</option>`).join('')}
+        ${opts.map((s) => `<option value="${s}" ${s === it.secs ? 'selected' : ''}>${fmtSecsOpt(s)}</option>`).join('')}
       </select>
       <button class="iconbtn" data-act="up" data-i="${i}" aria-label="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
       <button class="iconbtn" data-act="remove" data-i="${i}" aria-label="Remove">✕</button>
@@ -214,25 +267,26 @@ function viewEdit(id) {
 
   return `
     <div class="row between">
-      <a class="btn ghost" href="#routines">‹ Back</a>
+      <a class="link" href="#routines">‹ Back</a>
       <button class="btn primary" data-act="save-routine">Save</button>
     </div>
     <div class="stack" style="margin-top:8px">
       <label class="field">Name<input class="input" id="r-name" maxlength="40" placeholder="e.g. Morning Wake-Up" value="${esc(d.name)}"></label>
       <div>
-        <div class="field muted small" style="font-weight:600">Color</div>
+        <div class="field">Color</div>
         <div class="row" style="flex-wrap:wrap;margin-top:8px">
           ${COLORS.map((c) => `<button data-act="color" data-v="${c}" aria-label="Color" style="width:32px;height:32px;border-radius:50%;background:${c};border:0;box-shadow:${c === swatch(d) ? '0 0 0 2px var(--bg), 0 0 0 4px var(--ink)' : 'none'}"></button>`).join('')}
         </div>
       </div>
       <label class="field">Rest between moves
-        <select class="input" id="r-rest">${[0, 3, 5, 10, 15, 20, 30].map((s) => `<option value="${s}" ${s === d.rest ? 'selected' : ''}>${s ? s + ' seconds' : 'No rest'}</option>`).join('')}</select>
+        <select class="input" id="r-rest">${[0, 3, 5, 10, 15, 20, 30, 45, 60].map((s) => `<option value="${s}" ${s === d.rest ? 'selected' : ''}>${s ? s + ' seconds' : 'No rest'}</option>`).join('')}</select>
       </label>
     </div>
     <div class="section-title"><h2>Moves</h2><span class="muted small">${fmtMins(routineSecs(d))} total</span></div>
     <div class="card" style="padding:4px 14px">${items || `<div class="empty">No moves yet.</div>`}</div>
     <button class="btn block" style="margin-top:12px" data-act="open-picker">Add moves</button>
-    ${id !== 'new' ? `<button class="btn danger block" style="margin-top:18px" data-act="delete-routine">Delete routine</button>` : ''}`;
+    ${id !== 'new' ? `<button class="btn block" style="margin-top:10px" data-act="duplicate-routine">Duplicate</button>
+    <button class="btn danger block" style="margin-top:6px" data-act="delete-routine">Delete routine</button>` : ''}`;
 }
 
 function syncDraftFields() {
@@ -241,20 +295,34 @@ function syncDraftFields() {
   const r = $('#r-rest'); if (r) draft.rest = Number(r.value);
 }
 
-function viewMoves() {
-  const groups = AREAS.map((area) => {
-    const list = allExercises().filter((e) => e.area === area);
-    if (!list.length) return '';
-    return `<div class="section-title"><h2>${area}</h2></div>
-      <div class="card" style="padding:2px 14px">${list.map((e) => `
-        <details class="move">
-          <summary><span class="grow">${esc(e.name)}</span>${e.sided ? '<span class="tag">each side</span>' : ''}${e.custom ? '<span class="tag">mine</span>' : ''}</summary>
-          <p>${esc(e.cue || 'No notes.')}</p>
-          ${e.custom ? `<button class="btn danger" data-act="delete-move" data-id="${e.id}" style="margin-top:6px">Delete move</button>` : ''}
-        </details>`).join('')}</div>`;
+let movesQuery = '';
+let movesArea = '';
+
+function movesListHtml() {
+  const found = searchMoves(movesQuery, movesArea);
+  if (!found.length) return `<div class="empty">No moves match.</div>`;
+  return areas().map((area) => {
+    const l = found.filter((e) => (e.area || 'Other') === area);
+    if (!l.length) return '';
+    return `<div class="section-title"><h2>${esc(area)}</h2><span class="muted small">${l.length}</span></div>
+      <div class="card" style="padding:2px 14px">${l.map((e) => `
+        <button class="moverow" data-act="show-move" data-id="${esc(e.id)}">
+          <span class="grow"><span class="name">${esc(e.name)}</span>
+          <span class="muted small">${esc([e.level, e.equipment && e.equipment !== 'None' ? e.equipment : '', e.sided ? 'each side' : ''].filter(Boolean).join(' · '))}</span></span>
+          <span class="chev">›</span>
+        </button>`).join('')}</div>`;
   }).join('');
+}
+
+function viewMoves() {
   return `<div class="row between"><h1 class="display">Moves</h1><button class="btn primary" data-act="new-move">New move</button></div>
-    <p class="muted small">Tap a move to see how to do it.</p>${groups}`;
+    <p class="muted small">${list('exercises').length} moves</p>
+    <label class="search">${ICON.search}<input id="moves-search" type="search" placeholder="Search moves, muscles, equipment" value="${esc(movesQuery)}" autocomplete="off"></label>
+    <div class="chips">
+      <button class="chip ${movesArea ? '' : 'on'}" data-act="area" data-v="">All</button>
+      ${areas().map((a) => `<button class="chip ${movesArea === a ? 'on' : ''}" data-act="area" data-v="${esc(a)}">${esc(a)}</button>`).join('')}
+    </div>
+    <div id="moves-list">${movesListHtml()}</div>`;
 }
 
 function viewProgress() {
@@ -269,16 +337,18 @@ function viewProgress() {
     const cls = [days.has(k) ? 'on' : '', d > today ? 'future' : '', k === dateKey(today) ? 'today' : ''].join(' ');
     cells.push(`<div class="c ${cls}" title="${k}"></div>`);
   }
-  const total = state.history.reduce((t, h) => t + h.secs, 0);
-  const recent = [...state.history].reverse().slice(0, 20).map((h) => `
+  const hs = history();
+  const total = hs.reduce((t, h) => t + h.secs, 0);
+  const recent = [...hs].reverse().slice(0, 30).map((h) => `
     <div class="item"><div class="grow"><div class="name">${esc(h.name)}</div>
-    <div class="muted small">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} · ${fmtMins(h.secs)}</div></div></div>`).join('');
-  const st = state.settings;
+    <div class="muted small">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} · ${fmtMins(h.secs)}</div></div>
+    <button class="iconbtn" data-act="delete-session" data-id="${esc(h.id)}" aria-label="Delete session">✕</button></div>`).join('');
+  const st = settings();
 
   return `<h1 class="display">Progress</h1>
-    <div class="stats" style="margin-top:14px">
+    <div class="stats">
       <div class="stat"><b>${streak()}</b><span>day streak</span></div>
-      <div class="stat"><b>${state.history.length}</b><span>sessions</span></div>
+      <div class="stat"><b>${hs.length}</b><span>sessions</span></div>
       <div class="stat"><b>${Math.round(total / 60)}</b><span>minutes</span></div>
     </div>
     <div class="section-title"><h2>Last 5 weeks</h2></div>
@@ -290,11 +360,15 @@ function viewProgress() {
       <label class="switch"><span>Voice cues</span><input type="checkbox" data-set="voice" ${st.voice ? 'checked' : ''}></label>
       <label class="switch"><span>Beeps</span><input type="checkbox" data-set="sound" ${st.sound ? 'checked' : ''}></label>
       <label class="switch"><span>Get-ready countdown</span>
-        <select class="input" data-set="getReady" style="width:auto;margin:0">${[0, 3, 5, 10].map((s) => `<option value="${s}" ${s === st.getReady ? 'selected' : ''}>${s ? s + 's' : 'Off'}</option>`).join('')}</select>
+        <select class="input" data-set="getReady" style="width:auto;margin:0">${[0, 3, 5, 10, 15].map((s) => `<option value="${s}" ${s === st.getReady ? 'selected' : ''}>${s ? s + 's' : 'Off'}</option>`).join('')}</select>
       </label>
     </div>
-    <button class="btn danger block" style="margin-top:18px" data-act="reset">Reset all data</button>
-    <p class="muted small" style="text-align:center;margin-top:16px">Your data is stored only on this device.</p>`;
+    <div class="section-title"><h2>Backup</h2></div>
+    <p class="muted small" style="margin:-4px 0 12px">History and in-app edits are saved on this device. Export a backup to move them to another device.</p>
+    <div class="row">
+      <button class="btn grow" data-act="export">Export</button>
+      <label class="btn grow">Import<input type="file" id="import-file" accept="application/json,.json" hidden></label>
+    </div>`;
 }
 
 /* ---------- Sheets ---------- */
@@ -302,30 +376,75 @@ function viewProgress() {
 function openSheet(html) {
   $('#sheet-panel').innerHTML = html;
   $('#sheet').hidden = false;
+  $('#sheet-panel').scrollTop = 0;
 }
 function closeSheet() { $('#sheet').hidden = true; }
 
-function pickerHtml() {
-  return `<div class="row between"><h2>Add moves</h2><button class="btn primary" data-act="close-sheet">Done</button></div>
-    ${AREAS.map((area) => {
-      const list = allExercises().filter((e) => e.area === area);
-      if (!list.length) return '';
-      return `<div class="section-title"><h3>${area}</h3></div>${list.map((e) => `
-        <button class="pick" data-act="add-move" data-id="${e.id}">
-          <span><b style="font-weight:600">${esc(e.name)}</b>${e.sided ? ' <span class="tag">each side</span>' : ''}</span>
-          <span class="plus">${ICON.plus}</span>
-        </button>`).join('')}`;
-    }).join('')}`;
+let pickQuery = '';
+
+function pickListHtml() {
+  const found = searchMoves(pickQuery);
+  if (!found.length) return `<div class="empty">No moves match.</div>`;
+  return areas().map((area) => {
+    const l = found.filter((e) => (e.area || 'Other') === area);
+    if (!l.length) return '';
+    return `<div class="section-title"><h3>${esc(area)}</h3></div>${l.map((e) => `
+      <button class="pick" data-act="add-move" data-id="${esc(e.id)}">
+        <span><span style="font-weight:500">${esc(e.name)}</span> <span class="tag">${fmtSecsOpt(e.defaultSecs || 30)}${e.sided ? ' each side' : ''}</span></span>
+        <span class="plus">${ICON.plus}</span>
+      </button>`).join('')}`;
+  }).join('');
 }
 
-function newMoveHtml() {
-  return `<div class="row between"><h2>New move</h2><button class="btn ghost" data-act="close-sheet">Cancel</button></div>
-    <div class="stack" style="margin-top:12px">
-      <label class="field">Name<input class="input" id="m-name" maxlength="40" placeholder="e.g. Banded shoulder stretch"></label>
-      <label class="field">Area<select class="input" id="m-area">${AREAS.map((a) => `<option>${a}</option>`).join('')}</select></label>
-      <label class="field">How to do it<textarea class="input" id="m-cue" maxlength="240" placeholder="Short reminder shown during the routine"></textarea></label>
-      <label class="switch" style="border:0"><span>Do each side separately</span><input type="checkbox" id="m-sided"></label>
-      <button class="btn primary block" data-act="save-move">Save move</button>
+function pickerHtml() {
+  pickQuery = '';
+  return `<div class="row between"><h2>Add moves</h2><button class="btn primary" data-act="close-sheet">Done</button></div>
+    <label class="search">${ICON.search}<input id="pick-search" type="search" placeholder="Search moves" autocomplete="off"></label>
+    <div id="pick-list">${pickListHtml()}</div>`;
+}
+
+function isImage(url) { return /\.(png|jpe?g|gif|webp|avif|svg)(\?.*)?$/i.test(url); }
+
+function moveDetailHtml(e) {
+  const meta = [e.area, e.level, e.equipment, e.sided ? 'each side' : ''].filter(Boolean);
+  const media = e.media
+    ? isImage(e.media)
+      ? `<img class="media" src="${esc(e.media)}" alt="${esc(e.name)}" loading="lazy">`
+      : `<a class="btn block" href="${esc(e.media)}" target="_blank" rel="noopener">Open video / link</a>`
+    : '';
+  return `<div class="row between"><button class="link" data-act="close-sheet">Close</button><button class="btn" data-act="edit-move" data-id="${esc(e.id)}">Edit</button></div>
+    <h1 class="display" style="font-size:30px;margin-top:8px">${esc(e.name)}</h1>
+    <p class="muted small" style="margin:6px 0 0">${esc(meta.join(' · '))} · ${fmtSecsOpt(e.defaultSecs || 30)} default</p>
+    ${media ? `<div style="margin-top:16px">${media}</div>` : ''}
+    ${e.cue ? `<p class="cue">${esc(e.cue)}</p>` : ''}
+    ${e.steps?.length ? `<div class="section-title"><h3>How to</h3></div><ol class="steps">${e.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>` : ''}
+    ${e.muscles ? `<div class="section-title"><h3>Muscles</h3></div><p class="muted" style="margin:0">${esc(e.muscles)}</p>` : ''}
+    ${e.notes ? `<div class="section-title"><h3>Notes</h3></div><p class="muted" style="margin:0;white-space:pre-wrap">${esc(e.notes)}</p>` : ''}
+    ${isEdited(e) ? `<p class="muted small" style="margin-top:24px">Edited on this device.</p>` : ''}`;
+}
+
+function moveFormHtml(e) {
+  const isNew = !e.id;
+  return `<div class="row between"><button class="link" data-act="close-sheet">Cancel</button><button class="btn primary" data-act="save-move" data-id="${esc(e.id)}">Save</button></div>
+    <h2 style="margin-top:8px">${isNew ? 'New move' : 'Edit move'}</h2>
+    <div class="stack" style="margin-top:14px">
+      <label class="field">Name<input class="input" id="m-name" maxlength="60" value="${esc(e.name)}" placeholder="e.g. Banded shoulder stretch"></label>
+      <div class="grid2">
+        <label class="field">Area<input class="input" id="m-area" list="area-list" value="${esc(e.area)}"></label>
+        <label class="field">Level<select class="input" id="m-level">${LEVELS.map((l) => `<option ${l === e.level ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      </div>
+      <datalist id="area-list">${[...new Set([...AREAS, ...areas()])].map((a) => `<option value="${esc(a)}">`).join('')}</datalist>
+      <div class="grid2">
+        <label class="field">Equipment<input class="input" id="m-equipment" value="${esc(e.equipment)}" placeholder="None"></label>
+        <label class="field">Default time<select class="input" id="m-secs">${SECS_OPTS.map((s) => `<option value="${s}" ${s === e.defaultSecs ? 'selected' : ''}>${fmtSecsOpt(s)}</option>`).join('')}</select></label>
+      </div>
+      <label class="switch" style="border:0;padding:4px 0"><span>Do each side separately</span><input type="checkbox" id="m-sided" ${e.sided ? 'checked' : ''}></label>
+      <label class="field">Muscles<input class="input" id="m-muscles" value="${esc(e.muscles)}" placeholder="e.g. Hamstrings, calves"></label>
+      <label class="field">Timer cue <span class="muted">(shown during the routine)</span><textarea class="input" id="m-cue" maxlength="300">${esc(e.cue)}</textarea></label>
+      <label class="field">Steps <span class="muted">(one per line)</span><textarea class="input" id="m-steps" style="min-height:110px">${esc((e.steps || []).join('\n'))}</textarea></label>
+      <label class="field">Image or video link<input class="input" id="m-media" type="url" value="${esc(e.media)}" placeholder="https://…"></label>
+      <label class="field">Notes<textarea class="input" id="m-notes">${esc(e.notes)}</textarea></label>
+      ${isNew ? '' : `<button class="btn danger block" data-act="delete-move" data-id="${esc(e.id)}">Delete move</button>`}
     </div>`;
 }
 
@@ -343,7 +462,7 @@ async function requestWakeLock() {
 }
 
 function beep(freq = 880, ms = 140, vol = 0.18) {
-  if (!state.settings.sound || !audioCtx) return;
+  if (!settings().sound || !audioCtx) return;
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
   o.frequency.value = freq; o.type = 'sine';
@@ -353,7 +472,7 @@ function beep(freq = 880, ms = 140, vol = 0.18) {
   o.start(); o.stop(audioCtx.currentTime + ms / 1000);
 }
 function say(text) {
-  if (!state.settings.voice || !('speechSynthesis' in window)) return;
+  if (!settings().voice || !('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.rate = 1.02;
@@ -369,13 +488,14 @@ function buildSteps(r) {
     if (r.rest > 0 && idx < items.length - 1) steps.push({ type: 'rest', secs: r.rest });
   });
   steps.forEach((s, i) => { s.next = steps.slice(i + 1).find((n) => n.type === 'work') || null; });
-  if (state.settings.getReady && steps.length) steps.unshift({ type: 'ready', secs: state.settings.getReady, next: steps[0] });
+  const ready = settings().getReady;
+  if (ready && steps.length) steps.unshift({ type: 'ready', secs: ready, next: steps[0] });
   return steps;
 }
 
 async function startPlayer(id) {
   const r = routineById(id);
-  if (!r || !r.items.length) return;
+  if (!r || !r.items.some((i) => exById(i.exId))) return;
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -439,7 +559,8 @@ function renderPlayer() {
   el.classList.toggle('rest', s.type !== 'work');
   const title = s.type === 'work' ? s.ex.name : s.type === 'rest' ? 'Breathe' : player.r.name;
   const cue = s.type === 'work' ? s.ex.cue : s.next ? `Up next: ${s.next.ex.name}` : '';
-  const next = s.type === 'work' && s.next ? `Next: ${esc(s.next.ex.name)}${s.next.side ? ' (' + s.next.side.toLowerCase() + ')' : ''}` : s.type === 'work' ? 'Last move!' : '';
+  const next = s.type === 'work' && s.next ? `Next: ${esc(s.next.ex.name)}${s.next.side ? ' (' + s.next.side.toLowerCase() + ')' : ''}` : s.type === 'work' ? 'Last move' : '';
+  const img = s.type === 'work' && s.ex.media && isImage(s.ex.media) ? `<img class="p-media" src="${esc(s.ex.media)}" alt="">` : '';
   el.innerHTML = `
     <div class="p-top">
       <button class="link" data-act="stop">End</button>
@@ -450,7 +571,8 @@ function renderPlayer() {
     <div class="p-label">${stepLabel(s)}</div>
     <div class="p-name">${esc(title)}</div>
     <div class="p-side">${esc(s.side || '')}</div>
-    <div class="p-ring">
+    ${img}
+    <div class="p-ring ${img ? 'small' : ''}">
       <svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="45" fill="none" stroke-width="7"/>
       <circle class="bar" id="p-ring" cx="50" cy="50" r="45" fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="282.74" stroke-dashoffset="0"/></svg>
       <div class="p-time" id="p-time"></div>
@@ -505,15 +627,15 @@ function finishPlayer() {
   clearInterval(player.timer);
   const r = player.r;
   const secs = player.steps.filter((s) => s.type !== 'ready').reduce((t, s) => t + s.secs, 0);
-  state.history.push({ routineId: r.id, name: r.name, date: new Date().toISOString(), secs });
-  save();
+  const id = 'h-' + uid();
+  put('history', { id, routineId: r.id, name: r.name, date: new Date().toISOString(), secs });
   beep(880, 160); setTimeout(() => beep(1175, 260), 180);
   say('Well done. Routine complete.');
   const el = $('#player');
   el.classList.remove('rest');
   el.innerHTML = `
     <div style="margin:auto 0;display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div class="done-mark">${mark()}</div>
+      ${logo('done-logo')}
       <h1 class="display">Well done</h1>
       <p class="muted" style="margin:0">${esc(r.name)} · ${fmtMins(secs)}</p>
       <p class="small" style="margin:6px 0 0">${streak()} day streak</p>
@@ -526,7 +648,7 @@ function finishPlayer() {
 function render() {
   const [route, arg] = (location.hash.slice(1) || 'home').split('/');
   if (route !== 'edit') draft = null;
-  const views = { home: viewHome, routines: viewRoutines, moves: viewMoves, progress: viewProgress, edit: () => viewEdit(arg) };
+  const views = { home: viewHome, routines: viewRoutines, moves: viewMoves, progress: viewProgress, edit: () => viewEdit(decodeURIComponent(arg || '')) };
   const v = views[route] || viewHome;
   $('#view').innerHTML = v();
   const tab = route === 'edit' ? 'routines' : (views[route] ? route : 'home');
@@ -534,6 +656,49 @@ function render() {
 }
 
 window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+
+function readMoveForm(id) {
+  const name = $('#m-name').value.trim();
+  if (!name) { toast('Give the move a name'); return null; }
+  const base = id ? { ...exById(id) } : blankExercise();
+  return {
+    ...base,
+    id: id || `${slug(name) || 'move'}-${uid().slice(0, 4)}`,
+    name,
+    area: $('#m-area').value.trim() || 'Other',
+    level: $('#m-level').value,
+    equipment: $('#m-equipment').value.trim() || 'None',
+    defaultSecs: Number($('#m-secs').value),
+    sided: $('#m-sided').checked,
+    muscles: $('#m-muscles').value.trim(),
+    cue: $('#m-cue').value.trim(),
+    steps: $('#m-steps').value.split('\n').map((s) => s.trim()).filter(Boolean),
+    media: $('#m-media').value.trim(),
+    notes: $('#m-notes').value.trim(),
+  };
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `bowe-backup-${dateKey(new Date())}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+async function importData(file) {
+  try {
+    const data = JSON.parse(await file.text());
+    if (!data || !data.exercises || !data.routines) throw new Error();
+    db = merge(db, data);
+    saveLocal();
+    render();
+    toast('Backup imported');
+  } catch {
+    toast('That file is not a BOWE backup');
+  }
+}
 
 document.addEventListener('click', (e) => {
   const t = e.target.closest('[data-act]');
@@ -554,7 +719,12 @@ document.addEventListener('click', (e) => {
     case 'up': syncDraftFields(); [draft.items[i - 1], draft.items[i]] = [draft.items[i], draft.items[i - 1]]; render(); break;
     case 'remove': syncDraftFields(); draft.items.splice(i, 1); render(); break;
     case 'open-picker': syncDraftFields(); openSheet(pickerHtml()); break;
-    case 'add-move': draft.items.push({ exId: t.dataset.id, secs: 30 }); toast(`Added ${exById(t.dataset.id).name}`); break;
+    case 'add-move': {
+      const ex = exById(t.dataset.id);
+      draft.items.push({ exId: ex.id, secs: ex.defaultSecs || 30 });
+      toast(`Added ${ex.name}`);
+      break;
+    }
     case 'close-sheet': closeSheet(); render(); break;
     case 'save-routine': {
       syncDraftFields();
@@ -563,57 +733,84 @@ document.addEventListener('click', (e) => {
       if (!draft.items.length) { toast('Add at least one move'); break; }
       const { _for, ...clean } = draft;
       clean.name = name;
-      const idx = state.routines.findIndex((r) => r.id === clean.id);
-      if (idx >= 0) state.routines[idx] = clean; else state.routines.push(clean);
-      save(); draft = null; toast('Routine saved'); location.hash = '#routines';
+      put('routines', clean);
+      draft = null; toast('Routine saved'); location.hash = '#routines';
+      break;
+    }
+    case 'duplicate-routine': {
+      syncDraftFields();
+      const { _for, ...src } = draft;
+      put('routines', { ...JSON.parse(JSON.stringify(src)), id: 'r-' + uid(), name: `${src.name} copy`, createdAt: Date.now() });
+      draft = null; toast('Duplicated'); location.hash = '#routines';
       break;
     }
     case 'delete-routine':
       if (confirm('Delete this routine?')) {
-        state.routines = state.routines.filter((r) => r.id !== draft.id);
-        save(); draft = null; location.hash = '#routines';
+        remove('routines', draft.id);
+        draft = null; location.hash = '#routines';
       }
       break;
 
-    case 'new-move': openSheet(newMoveHtml()); break;
+    case 'area': movesArea = t.dataset.v; render(); break;
+    case 'show-move': openSheet(moveDetailHtml(exById(t.dataset.id))); break;
+    case 'new-move': openSheet(moveFormHtml(blankExercise())); break;
+    case 'edit-move': openSheet(moveFormHtml(exById(t.dataset.id))); break;
     case 'save-move': {
-      const name = $('#m-name').value.trim();
-      if (!name) { toast('Give the move a name'); break; }
-      state.custom.push({ id: 'c-' + uid(), name, area: $('#m-area').value, cue: $('#m-cue').value.trim(), sided: $('#m-sided').checked, custom: true });
-      save(); closeSheet(); render(); toast('Move added');
+      const rec = readMoveForm(t.dataset.id);
+      if (!rec) break;
+      put('exercises', rec);
+      openSheet(moveDetailHtml(rec));
+      render();
+      toast('Move saved');
       break;
     }
-    case 'delete-move':
-      if (confirm('Delete this move? It will be removed from your routines too.')) {
-        state.custom = state.custom.filter((m) => m.id !== t.dataset.id);
-        state.routines.forEach((r) => { r.items = r.items.filter((it) => it.exId !== t.dataset.id); });
-        save(); render();
+    case 'delete-move': {
+      const id = t.dataset.id;
+      const used = routines().filter((r) => r.items.some((it) => it.exId === id));
+      const msg = used.length ? `Delete this move? It will also be removed from ${used.map((r) => r.name).join(', ')}.` : 'Delete this move?';
+      if (confirm(msg)) {
+        used.forEach((r) => put('routines', { ...r, items: r.items.filter((it) => it.exId !== id) }));
+        remove('exercises', id);
+        closeSheet(); render();
       }
       break;
+    }
 
-    case 'reset':
-      if (confirm('Erase all routines, custom moves and history?')) { state = seed(); save(); render(); toast('Fresh start!'); }
+    case 'delete-session':
+      if (confirm('Delete this session from your history?')) { remove('history', t.dataset.id); render(); }
       break;
+    case 'export': exportData(); break;
   }
 });
 
 document.addEventListener('change', (e) => {
   const t = e.target;
   if (t.dataset.act === 'secs') { syncDraftFields(); draft.items[Number(t.dataset.i)].secs = Number(t.value); render(); }
-  if (t.dataset.set) {
-    state.settings[t.dataset.set] = t.type === 'checkbox' ? t.checked : Number(t.value);
-    save();
+  if (t.dataset.set) setSetting(t.dataset.set, t.type === 'checkbox' ? t.checked : Number(t.value));
+  if (t.id === 'import-file' && t.files[0]) { importData(t.files[0]); t.value = ''; }
+});
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'moves-search') {
+    movesQuery = e.target.value;
+    $('#moves-list').innerHTML = movesListHtml();
+  }
+  if (e.target.id === 'pick-search') {
+    pickQuery = e.target.value;
+    $('#pick-list').innerHTML = pickListHtml();
   }
 });
 
-// Re-acquire the screen wake lock when returning to the app mid-routine.
 document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'visible' && player && !wakeLock) {
-    await requestWakeLock();
-  }
+  if (document.visibilityState === 'visible' && player && !wakeLock) await requestWakeLock();
 });
+
+/* ---------- Start ---------- */
 
 render();
+loadStarter().then((changed) => {
+  if (changed && !player && !draft && $('#sheet').hidden) render();
+});
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
