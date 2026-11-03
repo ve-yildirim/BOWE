@@ -1,4 +1,4 @@
-# Mobility Mooby 🐮
+# Bend-over with Emre 🐮
 
 A custom mobility routine app for iPhone, built as an installable web app (PWA).
 

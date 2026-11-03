@@ -1,5 +1,5 @@
 // Bump VERSION whenever app files change so phones pick up the update.
-const VERSION = 'mooby-v1';
+const VERSION = 'mooby-v2';
 const SHELL = [
   './',
   'index.html',
