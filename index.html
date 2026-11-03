@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mobility Mooby</title>
+  <meta name="description" content="Build and follow your own mobility routines with Mooby.">
+  <meta name="theme-color" content="#FFF8EE" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1C1917" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Mooby">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="view" class="view"></main>
+
+  <nav class="tabbar" id="tabbar">
+    <a href="#home" data-tab="home"><span class="ti">🏠</span>Home</a>
+    <a href="#routines" data-tab="routines"><span class="ti">📋</span>Routines</a>
+    <a href="#moves" data-tab="moves"><span class="ti">🧘</span>Moves</a>
+    <a href="#progress" data-tab="progress"><span class="ti">📈</span>Progress</a>
+  </nav>
+
+  <section id="player" class="player" hidden></section>
+  <div id="sheet" class="sheet" hidden><div class="sheet-panel" id="sheet-panel"></div></div>
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
