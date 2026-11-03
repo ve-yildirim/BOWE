@@ -227,8 +227,9 @@ details.move p { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
 /* Logo */
 .hero { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .logo { display: block; height: auto; image-rendering: pixelated; }
-.hero-logo { width: 104px; }
-.hero .brand { font-size: 13px; font-weight: 600; letter-spacing: .22em; color: var(--accent); }
+.hero-logo { width: 86px; flex: none; }
+.hero .brand { font-family: var(--serif); font-size: 17px; line-height: 1.25; color: var(--ink); letter-spacing: 0; white-space: nowrap; }
+.hero .brand b { font-family: var(--sans); font-size: 15px; font-weight: 700; letter-spacing: .06em; color: var(--accent); }
 .done-logo { width: min(70vw, 280px); }
 
 /* Search & filters */
@@ -254,5 +255,10 @@ details.move p { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
 .p-ring.small { width: min(44vw, 180px); }
 .p-ring.small .p-time { font-size: 44px; }
 @media (prefers-color-scheme: dark) {
-  .logo { background: #ECE8DF; border-radius: 18px; padding: 8px 10px; }
+  /* White outline that follows the wizard's shape, so it stands out on dark backgrounds */
+  .logo {
+    filter: drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff)
+            drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff);
+  }
 }
+@media (max-width: 370px) { .hero .brand { white-space: normal; } }

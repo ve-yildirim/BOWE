@@ -217,7 +217,7 @@ function viewHome() {
   return `
     <header class="hero">
       ${logo('hero-logo')}
-      <div class="brand">BOWE</div>
+      <div class="brand"><b>BOWE:</b> Bend-over with Emre</div>
     </header>
     <h1 class="display">${greet}</h1>
     <p class="lede">${today.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
