@@ -3835,6 +3835,60 @@
       "steps": [],
       "media": "",
       "notes": ""
+    },
+    {
+      "id": "90-90-internal-knee-drops",
+      "name": "90/90 Internal Rotation Knee Drops",
+      "area": "Hips",
+      "muscles": "Hip internal rotators",
+      "level": "Beginner",
+      "equipment": "Mat",
+      "sided": true,
+      "defaultSecs": 45,
+      "cue": "In 90/90, lift the back knee and drop it inward toward the floor, then return.",
+      "steps": [
+        "Sit in 90/90 with hands behind you for support.",
+        "Lift the back knee and rotate it inward toward the floor.",
+        "Return slowly; keep the front leg still."
+      ],
+      "media": "https://www.youtube.com/watch?v=WUKHM6-ekJM&t=35s",
+      "notes": "From: 8-Minute Hip Mobility Routine (nourishmovelove)"
+    },
+    {
+      "id": "90-90-rear-knee-lifts",
+      "name": "90/90 Rear Knee Lifts",
+      "area": "Hips",
+      "muscles": "Hip internal rotators, glute med",
+      "level": "Intermediate",
+      "equipment": "Mat",
+      "sided": true,
+      "defaultSecs": 45,
+      "cue": "In 90/90, sit tall and lift the back knee and heel off the floor, then lower.",
+      "steps": [
+        "Sit tall in 90/90, hands light or off the floor.",
+        "Lift the back knee and heel together off the floor.",
+        "Pause at the top, lower with control."
+      ],
+      "media": "https://www.youtube.com/watch?v=WUKHM6-ekJM&t=205s",
+      "notes": "From: 8-Minute Hip Mobility Routine (nourishmovelove)"
+    },
+    {
+      "id": "v-sit-leg-lifts",
+      "name": "V-Sit Leg Lifts",
+      "area": "Core",
+      "muscles": "Hip flexors, core",
+      "level": "Intermediate",
+      "equipment": "Dumbbell or object",
+      "sided": false,
+      "defaultSecs": 45,
+      "cue": "Seated, legs straight, lift both legs over the dumbbell side to side.",
+      "steps": [
+        "Sit with legs straight, an object beside your shins, hands behind you.",
+        "Lean back slightly and lift both legs over the object.",
+        "Lift them back over to the other side; keep the chest tall."
+      ],
+      "media": "https://www.youtube.com/watch?v=WUKHM6-ekJM&t=390s",
+      "notes": "From: 8-Minute Hip Mobility Routine (nourishmovelove)"
     }
   ],
   "routines": [

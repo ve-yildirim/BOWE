@@ -1,5 +1,5 @@
 // Bump VERSION whenever app files change so phones pick up the update.
-const VERSION = 'bowe-v8';
+const VERSION = 'bowe-v9';
 const SHELL = [
   './',
   'index.html',
