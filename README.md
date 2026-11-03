@@ -1,4 +1,4 @@
-# Bend-over with Emre 🐮
+# Bend-over with Emre (BOWE)
 
 A custom mobility routine app for iPhone, built as an installable web app (PWA).
 

@@ -29,8 +29,7 @@ const BUILTIN = [
   { id: 'wrist-rocks', name: 'Wrist rocks', area: 'Wrists', sided: false, cue: 'On all fours, fingers forward, gently rock forward and back over your hands.' },
 ];
 
-const COLORS = ['#3FA796', '#FFB547', '#F4A7B9', '#7FA7F4', '#B79CF2', '#F28C6B'];
-const EMOJIS = ['🌅', '💻', '🦵', '🧘', '🐮', '🌙', '⚡', '🔥'];
+const COLORS = ['#6F8F78', '#C9A27E', '#B98B82', '#8A9DB0', '#A39BB5', '#9C9A8E'];
 const SECS_OPTS = [10, 15, 20, 30, 45, 60, 75, 90, 120, 180];
 
 const STORE_KEY = 'mooby.v1';
@@ -112,39 +111,40 @@ function toast(msg) {
   toastTimer = setTimeout(() => { t.hidden = true; }, 1800);
 }
 
-function mooby() {
-  return `<svg viewBox="0 0 120 120" aria-hidden="true">
-    <path d="M38 30 C34 20 36 14 40 10 C42 18 44 22 47 27Z" fill="#F2D7A6" stroke="#2B2420" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M82 30 C86 20 84 14 80 10 C78 18 76 22 73 27Z" fill="#F2D7A6" stroke="#2B2420" stroke-width="3" stroke-linejoin="round"/>
-    <ellipse cx="20" cy="50" rx="15" ry="8.5" transform="rotate(-20 20 50)" fill="#fff" stroke="#2B2420" stroke-width="3"/>
-    <ellipse cx="100" cy="50" rx="15" ry="8.5" transform="rotate(20 100 50)" fill="#fff" stroke="#2B2420" stroke-width="3"/>
-    <ellipse cx="60" cy="62" rx="38" ry="36" fill="#fff" stroke="#2B2420" stroke-width="3"/>
-    <path d="M30 52 C30 38 44 32 52 38 C58 44 50 52 42 54 C36 56 32 58 30 52Z" fill="#2B2420"/>
-    <path d="M26 45 Q60 28 94 45" fill="none" stroke="#FFB547" stroke-width="7" stroke-linecap="round"/>
-    <circle cx="46" cy="60" r="4.5" fill="#2B2420"/><circle cx="74" cy="60" r="4.5" fill="#2B2420"/>
-    <circle cx="47.5" cy="58.5" r="1.4" fill="#fff"/><circle cx="75.5" cy="58.5" r="1.4" fill="#fff"/>
-    <ellipse cx="60" cy="82" rx="24" ry="15" fill="#F4A7B9" stroke="#2B2420" stroke-width="3"/>
-    <ellipse cx="52" cy="82" rx="3" ry="4" fill="#C9677F"/><ellipse cx="68" cy="82" rx="3" ry="4" fill="#C9677F"/>
+function mark() {
+  return `<svg viewBox="0 0 512 512" aria-hidden="true">
+    <path d="M190 404 L190 252 C190 176 236 132 292 140 C340 147 356 196 350 262" fill="none" stroke="currentColor" stroke-width="40" stroke-linecap="round"/>
+    <circle cx="344" cy="330" r="30" fill="currentColor"/>
   </svg>`;
 }
+const swatch = (r) => (COLORS.includes(r.color) ? r.color : COLORS[0]);
+
+const svgI = (d, fill = false) => `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" ${fill ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"'}>${d}</svg>`;
+const ICON = {
+  play: svgI('<path d="M8 5.5v13l11-6.5z"/>', true),
+  pause: svgI('<rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/>', true),
+  prev: svgI('<path d="M18 6l-8 6 8 6z" fill="currentColor"/><path d="M6 6v12"/>'),
+  next: svgI('<path d="M6 6l8 6-8 6z" fill="currentColor"/><path d="M18 6v12"/>'),
+  plus: svgI('<path d="M12 5v14M5 12h14"/>'),
+};
 
 /* ---------- Views ---------- */
 
 function routineCard(r) {
   const n = r.items.length;
   return `<div class="card routine">
-    <div class="swatch" style="background:${esc(r.color)}33">${esc(r.emoji)}</div>
+    <div class="swatch" style="--c:${swatch(r)}">${esc((r.name || '?').trim().charAt(0).toUpperCase())}</div>
     <div class="grow">
       <h3>${esc(r.name)}</h3>
       <div class="meta">${n} move${n === 1 ? '' : 's'} · ${fmtMins(routineSecs(r))}</div>
     </div>
-    <button class="btn primary round" data-act="play" data-id="${r.id}" aria-label="Start ${esc(r.name)}" ${n ? '' : 'disabled'}>▶</button>
+    <button class="play" data-act="play" data-id="${r.id}" aria-label="Start ${esc(r.name)}" ${n ? '' : 'disabled'}>${ICON.play}</button>
   </div>`;
 }
 
 function viewHome() {
   const h = new Date().getHours();
-  const greet = h < 12 ? 'Good morning!' : h < 18 ? 'Good afternoon!' : 'Good evening!';
+  const greet = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
   const s = streak();
   const w = thisWeek();
   const days = activeDays();
@@ -154,33 +154,35 @@ function viewHome() {
     const d = new Date(monday); d.setDate(monday.getDate() + i);
     const k = dateKey(d);
     const cls = days.has(k) ? 'on' : k === dateKey(today) ? 'today' : '';
-    return `<div><div class="d">${label}</div><div class="dot ${cls}">${days.has(k) ? '✓' : ''}</div></div>`;
+    return `<div><div class="d">${label}</div><div class="dot ${cls}"></div></div>`;
   }).join('');
 
   return `
-    <div class="hero">${mooby()}<div><h1>${greet}</h1><p class="muted" style="margin:4px 0 0">Ready to moo-ve today?</p></div></div>
+    <header class="brandbar"><span class="brand">${mark()}BOWE</span><span class="muted small">${today.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span></header>
+    <h1 class="display">${greet}</h1>
+    <p class="lede">A few quiet minutes for your body.</p>
     <div class="stats">
-      <div class="card stat"><b>${s}🔥</b><span>day streak</span></div>
-      <div class="card stat"><b>${w.sessions}</b><span>this week</span></div>
-      <div class="card stat"><b>${Math.round(w.secs / 60)}</b><span>minutes</span></div>
+      <div class="stat"><b>${s}</b><span>day streak</span></div>
+      <div class="stat"><b>${w.sessions}</b><span>this week</span></div>
+      <div class="stat"><b>${Math.round(w.secs / 60)}</b><span>minutes</span></div>
     </div>
-    <div class="card" style="margin-top:12px"><div class="week">${week}</div></div>
-    <div class="section-title"><h2>Your routines</h2><a class="btn ghost" href="#edit/new">+ New</a></div>
+    <div class="week">${week}</div>
+    <div class="section-title"><h2>Routines</h2><a class="link" href="#edit/new">New</a></div>
     <div class="stack">${state.routines.length ? state.routines.map(routineCard).join('') : `<div class="empty">No routines yet. Make your first one!</div>`}</div>`;
 }
 
 function viewRoutines() {
   const list = state.routines.map((r) => `
     <div class="card routine">
-      <div class="swatch" style="background:${esc(r.color)}33">${esc(r.emoji)}</div>
+      <div class="swatch" style="--c:${swatch(r)}">${esc((r.name || '?').trim().charAt(0).toUpperCase())}</div>
       <a class="grow" href="#edit/${r.id}" style="color:inherit;text-decoration:none">
         <h3>${esc(r.name)}</h3>
         <div class="meta">${r.items.map((i) => esc(exById(i.exId)?.name || '')).filter(Boolean).join(' · ') || 'No moves yet'}</div>
       </a>
-      <button class="btn primary round" data-act="play" data-id="${r.id}" aria-label="Start" ${r.items.length ? '' : 'disabled'}>▶</button>
+      <button class="play" data-act="play" data-id="${r.id}" aria-label="Start ${esc(r.name)}" ${r.items.length ? '' : 'disabled'}>${ICON.play}</button>
     </div>`).join('');
   return `
-    <div class="row between"><h1>Routines</h1><a class="btn primary" href="#edit/new">+ New</a></div>
+    <div class="row between"><h1 class="display">Routines</h1><a class="btn primary" href="#edit/new">New routine</a></div>
     <p class="muted small">Tap a routine to edit it.</p>
     <div class="stack">${list || `<div class="empty">No routines yet.</div>`}</div>`;
 }
@@ -193,7 +195,7 @@ function viewEdit(id) {
     if (id !== 'new' && !src) { location.hash = '#routines'; return ''; }
     draft = src
       ? JSON.parse(JSON.stringify(src))
-      : { id: uid(), name: '', emoji: EMOJIS[4], color: COLORS[0], rest: 5, items: [] };
+      : { id: uid(), name: '', color: COLORS[0], rest: 5, items: [] };
     draft._for = id;
   }
   const d = draft;
@@ -218,12 +220,9 @@ function viewEdit(id) {
     <div class="stack" style="margin-top:8px">
       <label class="field">Name<input class="input" id="r-name" maxlength="40" placeholder="e.g. Morning Wake-Up" value="${esc(d.name)}"></label>
       <div>
-        <div class="field muted small" style="font-weight:600">Icon</div>
-        <div class="row" style="flex-wrap:wrap;margin-top:6px">
-          ${EMOJIS.map((e) => `<button class="swatch" data-act="emoji" data-v="${e}" style="border:2px solid ${e === d.emoji ? 'var(--accent)' : 'transparent'};background:var(--card)">${e}</button>`).join('')}
-        </div>
+        <div class="field muted small" style="font-weight:600">Color</div>
         <div class="row" style="flex-wrap:wrap;margin-top:8px">
-          ${COLORS.map((c) => `<button data-act="color" data-v="${c}" aria-label="Color" style="width:32px;height:32px;border-radius:50%;background:${c};border:3px solid ${c === d.color ? 'var(--ink)' : 'transparent'}"></button>`).join('')}
+          ${COLORS.map((c) => `<button data-act="color" data-v="${c}" aria-label="Color" style="width:32px;height:32px;border-radius:50%;background:${c};border:0;box-shadow:${c === swatch(d) ? '0 0 0 2px var(--bg), 0 0 0 4px var(--ink)' : 'none'}"></button>`).join('')}
         </div>
       </div>
       <label class="field">Rest between moves
@@ -232,7 +231,7 @@ function viewEdit(id) {
     </div>
     <div class="section-title"><h2>Moves</h2><span class="muted small">${fmtMins(routineSecs(d))} total</span></div>
     <div class="card" style="padding:4px 14px">${items || `<div class="empty">No moves yet.</div>`}</div>
-    <button class="btn block" style="margin-top:12px" data-act="open-picker">+ Add moves</button>
+    <button class="btn block" style="margin-top:12px" data-act="open-picker">Add moves</button>
     ${id !== 'new' ? `<button class="btn danger block" style="margin-top:18px" data-act="delete-routine">Delete routine</button>` : ''}`;
 }
 
@@ -254,7 +253,7 @@ function viewMoves() {
           ${e.custom ? `<button class="btn danger" data-act="delete-move" data-id="${e.id}" style="margin-top:6px">Delete move</button>` : ''}
         </details>`).join('')}</div>`;
   }).join('');
-  return `<div class="row between"><h1>Moves</h1><button class="btn primary" data-act="new-move">+ New</button></div>
+  return `<div class="row between"><h1 class="display">Moves</h1><button class="btn primary" data-act="new-move">New move</button></div>
     <p class="muted small">Tap a move to see how to do it.</p>${groups}`;
 }
 
@@ -276,11 +275,11 @@ function viewProgress() {
     <div class="muted small">${new Date(h.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} · ${fmtMins(h.secs)}</div></div></div>`).join('');
   const st = state.settings;
 
-  return `<h1>Progress</h1>
+  return `<h1 class="display">Progress</h1>
     <div class="stats" style="margin-top:14px">
-      <div class="card stat"><b>${streak()}🔥</b><span>day streak</span></div>
-      <div class="card stat"><b>${state.history.length}</b><span>sessions</span></div>
-      <div class="card stat"><b>${Math.round(total / 60)}</b><span>minutes</span></div>
+      <div class="stat"><b>${streak()}</b><span>day streak</span></div>
+      <div class="stat"><b>${state.history.length}</b><span>sessions</span></div>
+      <div class="stat"><b>${Math.round(total / 60)}</b><span>minutes</span></div>
     </div>
     <div class="section-title"><h2>Last 5 weeks</h2></div>
     <div class="card"><div class="cal">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((l) => `<div class="h">${l}</div>`).join('')}${cells.join('')}</div></div>
@@ -314,7 +313,7 @@ function pickerHtml() {
       return `<div class="section-title"><h3>${area}</h3></div>${list.map((e) => `
         <button class="pick" data-act="add-move" data-id="${e.id}">
           <span><b style="font-weight:600">${esc(e.name)}</b>${e.sided ? ' <span class="tag">each side</span>' : ''}</span>
-          <span class="plus">+</span>
+          <span class="plus">${ICON.plus}</span>
         </button>`).join('')}`;
     }).join('')}`;
 }
@@ -443,7 +442,7 @@ function renderPlayer() {
   const next = s.type === 'work' && s.next ? `Next: ${esc(s.next.ex.name)}${s.next.side ? ' (' + s.next.side.toLowerCase() + ')' : ''}` : s.type === 'work' ? 'Last move!' : '';
   el.innerHTML = `
     <div class="p-top">
-      <button class="btn ghost" data-act="stop">✕ End</button>
+      <button class="link" data-act="stop">End</button>
       <span class="muted small">${player.i + 1} / ${player.steps.length}</span>
       <span class="muted small" id="p-remaining" style="min-width:64px;text-align:right"></span>
     </div>
@@ -456,13 +455,13 @@ function renderPlayer() {
       <circle class="bar" id="p-ring" cx="50" cy="50" r="45" fill="none" stroke-width="7" stroke-linecap="round" stroke-dasharray="282.74" stroke-dashoffset="0"/></svg>
       <div class="p-time" id="p-time"></div>
     </div>
-    ${s.type === 'work' ? '' : `<div class="p-mooby">${mooby()}</div>`}
+    ${s.type === 'work' ? '' : `<div class="breath" aria-hidden="true"></div>`}
     <p class="p-cue">${esc(cue)}</p>
     <div class="p-next">${next}</div>
     <div class="p-controls">
-      <button class="btn round" data-act="prev" aria-label="Previous">⏮</button>
-      <button class="btn primary round big" data-act="pause" aria-label="Pause" id="p-pause">${player.paused ? '▶' : '❚❚'}</button>
-      <button class="btn round" data-act="next" aria-label="Skip">⏭</button>
+      <button class="ctl" data-act="prev" aria-label="Previous">${ICON.prev}</button>
+      <button class="ctl main" data-act="pause" aria-label="Pause" id="p-pause">${player.paused ? ICON.play : ICON.pause}</button>
+      <button class="ctl" data-act="next" aria-label="Skip">${ICON.next}</button>
     </div>`;
   updatePlayerTime();
 }
@@ -487,7 +486,7 @@ function togglePause() {
     player.paused = true;
     if ('speechSynthesis' in window) speechSynthesis.cancel();
   }
-  $('#p-pause').textContent = player.paused ? '▶' : '❚❚';
+  $('#p-pause').innerHTML = player.paused ? ICON.play : ICON.pause;
 }
 
 function closePlayer() {
@@ -509,15 +508,15 @@ function finishPlayer() {
   state.history.push({ routineId: r.id, name: r.name, date: new Date().toISOString(), secs });
   save();
   beep(880, 160); setTimeout(() => beep(1175, 260), 180);
-  say('Moo-velous! Routine complete.');
+  say('Well done. Routine complete.');
   const el = $('#player');
   el.classList.remove('rest');
   el.innerHTML = `
     <div style="margin:auto 0;display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div class="done-mooby">${mooby()}</div>
-      <h1>Moo-velous!</h1>
-      <p class="muted" style="margin:0">${esc(r.name)} done · ${fmtMins(secs)}</p>
-      <p style="margin:6px 0 0;font-weight:700">${streak()}🔥 day streak</p>
+      <div class="done-mark">${mark()}</div>
+      <h1 class="display">Well done</h1>
+      <p class="muted" style="margin:0">${esc(r.name)} · ${fmtMins(secs)}</p>
+      <p class="small" style="margin:6px 0 0">${streak()} day streak</p>
     </div>
     <button class="btn primary block" data-act="stop" style="max-width:420px">Done</button>`;
 }
@@ -551,7 +550,6 @@ document.addEventListener('click', (e) => {
     case 'prev': goStep(player.left < player.steps[player.i].secs - 2 ? player.i : player.i - 1); break;
     case 'stop': closePlayer(); break;
 
-    case 'emoji': syncDraftFields(); draft.emoji = t.dataset.v; render(); break;
     case 'color': syncDraftFields(); draft.color = t.dataset.v; render(); break;
     case 'up': syncDraftFields(); [draft.items[i - 1], draft.items[i]] = [draft.items[i], draft.items[i - 1]]; render(); break;
     case 'remove': syncDraftFields(); draft.items.splice(i, 1); render(); break;
